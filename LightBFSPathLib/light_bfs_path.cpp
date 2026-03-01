@@ -25,6 +25,7 @@ namespace LightBFSPathLib
         Graph _graph;
         Path _tablePath;
         ifstream _tablereader;
+        vector<string> _graphText;
         bool _isInstance = false;
 
     public:
@@ -39,8 +40,8 @@ namespace LightBFSPathLib
         }
         bool ReadGraph()
         {
-            vector<string> v = File::ReadAllLines(_tablePath);
-            for (const auto &s : v)
+            _graphText = File::ReadAllLines(_tablePath);
+            for (const auto &s : _graphText)
             {
                 auto lineFull = Split(s, ' ');
                 if (lineFull.size() < 3)
@@ -49,7 +50,7 @@ namespace LightBFSPathLib
                     return false;
                 }
                 auto lineElement = span(lineFull).subspan(1);
-                if (lineFull[0] == "+")
+                if (StartsWith(lineFull[0],"*"))
                 {
                     // 行内元素全连接
                     for (size_t i = 0; i < lineElement.size(); ++i)
@@ -63,13 +64,41 @@ namespace LightBFSPathLib
                         }
                     }
                 }
-                else if (lineFull[0] == "-")
+                else if (StartsWith(lineFull[0],"+"))
                 {
                     // 行内除连接方式标识符以外的所有元素与第一个元素单向连接 方向:第一个元素->别的元素
                     std::string beginPos = lineElement[0];
                     for (const auto &endPos : span(lineElement).subspan(1))
                     {
                         _graph[beginPos].insert(endPos);
+                    }
+                }
+                else if(StartsWith(lineFull[0],"-"))
+                {
+                    // 删除行内除连接方式标识符以外的所有元素与第一个元素的单向连接 删除方向:第一个元素->别的元素
+                    std::string beginPos = lineElement[0];
+                    for (const auto &endPos : span(lineElement).subspan(1))
+                    {
+                        _graph[beginPos].erase(endPos);
+                    }
+                }else if(StartsWith(lineFull[0],"/"))
+                {
+                    // 删除行内除连接方式标识符以外的所有元素的互相所有连接关系
+                    for (size_t i = 0; i < lineElement.size(); ++i)
+                    {
+                        for (size_t j = i + 1; j < lineElement.size(); ++j)
+                        {
+                            const auto &a = lineElement[i];
+                            const auto &b = lineElement[j];
+                            auto itA = _graph.find(a);
+                            if (itA != _graph.end()) {
+                                itA->second.erase(b);
+                            }
+                            auto itB = _graph.find(b);
+                            if (itB != _graph.end()) {
+                                itB->second.erase(a);
+                            }
+                        }
                     }
                 }
                 else
