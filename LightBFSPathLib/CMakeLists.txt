@@ -3,6 +3,8 @@ include(GenerateExportHeader)
 
 add_library(light_bfs_path_lib SHARED 
     light_bfs_path.cpp
+    file.hpp
+    string.hpp
 )
 
 generate_export_header(light_bfs_path_lib)
