@@ -137,31 +137,19 @@ namespace BFSPathLib
         }
         void BFSPath::AddUni(const string &name, const string &beginPos, const vector<string> &endPoses)
         {
-            string fullName = "+" + name;
-            _SetName(fullName);
-            _AddUniConnection(beginPos, span(endPoses));
-            _AddRelationshipText<OpType::Add, GraphType::Uni>(name, endPoses, beginPos);
+            _MakeRelationship<OpType::Add,GraphType::Uni>(name,UniArgPack{.BeginPos=beginPos,.EndPoses=endPoses});
         }
         void BFSPath::AddBid(const string &name, const vector<string> &vertexs)
         {
-            string fullName = "*" + name;
-            _SetName(fullName);
-            _AddBidConnection(span(vertexs));
-            _AddRelationshipText<OpType::Add, GraphType::Bid>(name, vertexs);
+            _MakeRelationship<OpType::Add,GraphType::Bid>(name,BidArgPack{.Poses=vertexs});
         }
         void BFSPath::RemoveUni(const string &name, const string &beginPos, const vector<string> &endPoses)
         {
-            string fullName = "-" + name;
-            _SetName(fullName);
-            _RemoveUniConnection(beginPos, span(endPoses));
-            _AddRelationshipText<OpType::Rem, GraphType::Uni>(name, endPoses, beginPos);
+            _MakeRelationship<OpType::Rem,GraphType::Uni>(name,UniArgPack{.BeginPos=beginPos,.EndPoses=endPoses});
         }
         void BFSPath::RemoveBid(const string &name, const vector<string> &vertexs)
         {
-            string fullName = "/" + name;
-            _SetName(fullName);
-            _RemoveBidConnection(span(vertexs));
-            _AddRelationshipText<OpType::Rem, GraphType::Bid>(name, vertexs);
+            _MakeRelationship<OpType::Rem,GraphType::Bid>(name,BidArgPack{.Poses=vertexs});
         }
         
         bool BFSPath::ReadGraph()

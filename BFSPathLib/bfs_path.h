@@ -81,7 +81,7 @@ namespace BFSPathLib
         }
 
         template <OpType optype, GraphType graphtype>
-        static constexpr std::string _GetPrefixByTemplate() {
+        static constexpr std::string_view _GetPrefixByTemplate() {
             if constexpr (optype == OpType::Add) {
                 return (graphtype == GraphType::Uni) ? "+" : "*";
             } else {
@@ -109,15 +109,15 @@ namespace BFSPathLib
                 .name = fullName,
                 .content = shizuku::util::string::Join(line, " ")});
         }
-        void _AddRelationshipText(const std::string &fullName, const std::vector<std::string> &elementAfterPrefix)
+        void _AddRelationshipText(const std::string &fullName, const std::vector<std::string> &fullVector)
         {
             _graphText.push_back(RelationshipLine{
                 .name = fullName,
-                .content = shizuku::util::string::Join(elementAfterPrefix, " ")});
+                .content = shizuku::util::string::Join(fullVector, " ")});
         }
         void _SetTextsToVector();
         template <BFSPath::OpType optype, BFSPath::GraphType graphType>
-        void _FuncHandler(DoConnectionOpArgPack &arg){
+        void _FuncHandler(const DoConnectionOpArgPack &arg){
             if constexpr(optype==OpType::Add){
                 if constexpr(graphType==GraphType::Uni){
                     _AddUniConnection(arg);
@@ -140,24 +140,34 @@ namespace BFSPathLib
         void AddBid(const std::string &name, const std::vector<std::string> &vertexs);
         void RemoveUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses);
         void RemoveBid(const std::string &name, const std::vector<std::string> &vertexs);
-        
+    private:    
         template<BFSPath::OpType optype, BFSPath::GraphType graphtype>
-        void MakeRelationship(const std::string &relationName,std::conditional_t<graphtype==GraphType::Uni,UniArgPack,BidArgPack> graphArg){
-            constexpr std::string prefix=_GetPrefixByTemplate<optype,graphtype>();
+        void _MakeRelationship(const std::string &relationName,std::conditional_t<graphtype==GraphType::Uni,UniArgPack,BidArgPack> graphArg){
+            constexpr auto prefix = _GetPrefixByTemplate<optype, graphtype>();
             std::string fullName = prefix + relationName;
             _SetName(fullName);
             _FuncHandler<optype,graphtype>( graphArg);
             std::vector<std::string> postelement;
+            const int preReserveSize=[&](){
+                if constexpr(graphtype==GraphType::Uni){
+                    return 2 + graphArg.EndPoses.size();
+                }else{
+                    return 1 + graphArg.Poses.size();
+                }
+                
+            }();
+            postelement.reserve(preReserveSize);
+            postelement.push_back(fullName);
             if constexpr(graphtype==GraphType::Uni){
-                postelement.reserve(1);
-                postelement={graphArg.BeginPos,graphArg.EndPoses};      
+                postelement.push_back(std::string(graphArg.BeginPos));
+                postelement.insert(postelement.end(), graphArg.EndPoses.begin(), graphArg.EndPoses.end()); 
             }else{
-                postelement={graphArg.Poses};
+                postelement.insert(postelement.end(),graphArg.Poses.begin(), graphArg.Poses.end());
             }
             _AddRelationshipText(fullName,postelement);
             
         }
-
+    public:
         template <BFSPath::OpType optype, BFSPath::GraphType graphtype>
         void RemoveByNameAndType(const std::string &relationName)
         {
