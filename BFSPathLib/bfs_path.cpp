@@ -166,7 +166,6 @@ namespace BFSPathLib
                 {
                     throw std::runtime_error("Each line shall contain at least 2 elements excluding the connection mode identifier: " + s.content);
                 }
-                _SetName(lineFull[0]);
                 auto lineElement = span(lineFull).subspan(1);
                 if (StartsWith(lineFull[0], "*"))
                 {
