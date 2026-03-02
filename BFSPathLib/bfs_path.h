@@ -60,10 +60,10 @@ namespace BFSPathLib
         { &BFSPath::_RemoveUniConnection, &BFSPath::_RemoveBidConnection }  // Rem 对应 [1][0] 和 [1][1]
         };
 
-        template <BFSPath::OpType optype, BFSPath::GraphType graphtype,bool reverse>
+        template <BFSPath::OpType optype, BFSPath::GraphType graphtype,bool opReverse>
         constexpr int static _GetFuncIndexByTemplate(){
             constexpr int base = (static_cast<int>(optype) << 1) | static_cast<int>(graphtype);
-            return reverse ? (base ^ 0b11) : base;
+            return opReverse ? (base ^ 0b10) : base;
         }
 
         template <OpType optype, GraphType graphtype>

@@ -90,25 +90,21 @@ namespace BFSPathLib
 
         void BFSPath::_AddUniConnection(const DoConnectionOpArgPack &arg)
         {
-            std::cout<<"AddUni"<<endl;
             _AddUniConnection(shizuku::util::string::view::FromView(arg.UniBeginPos),arg.UniEndPoses);
         }
 
         void BFSPath::_AddBidConnection(const DoConnectionOpArgPack &arg)
         {   
-            std::cout<<"AddBid"<<endl;
             _AddBidConnection(arg.BidVertexs);
         }
 
         void BFSPath::_RemoveUniConnection(const DoConnectionOpArgPack &arg)
         {
-            std::cout<<"RemUni"<<endl;
             _RemoveUniConnection(shizuku::util::string::view::FromView(arg.UniBeginPos),arg.UniEndPoses);
         }
 
         void BFSPath::_RemoveBidConnection(const DoConnectionOpArgPack &arg)
         {
-            std::cout<<"RemBid"<<endl;
             _RemoveBidConnection(arg.BidVertexs);
         }
 
