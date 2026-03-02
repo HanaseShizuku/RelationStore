@@ -1,6 +1,7 @@
 #pragma once
 #include<string>
 #include<map>
+#include "bfs_path_lib_export.h"
 namespace BFSPathLib
 {
     struct NodeInfo
@@ -8,7 +9,7 @@ namespace BFSPathLib
             std::string parent;
             int hops = -1;
     };
-    class BFSResult{
+    class BFS_PATH_LIB_EXPORT BFSResult{
         private:
             std::map<std::string, NodeInfo> _resultMap;
         public:

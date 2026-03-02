@@ -10,7 +10,7 @@
 namespace BFSPathLib
 {
 
-    class BFSPath
+    class BFS_PATH_LIB_EXPORT BFSPath
     {
     private:
         using Graph = std::map<std::string, std::set<std::string>>;
