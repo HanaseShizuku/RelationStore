@@ -96,6 +96,22 @@ namespace BFSPathLib
                 .content = shizuku::util::string::Join(line, " ")});
         }
         void _SetTextsToVector();
+        template <BFSPath::OpType optype, BFSPath::GraphType graphtype>
+        void _FuncHandler(DoConnectionOpArgPack &arg){
+            if constexpr(optype==OpType::Add){
+                if constexpr(graphType==GraphType::Uni){
+                    _AddUniConnection(arg);
+                }else{
+                    _AddBidConnection(arg);
+                }
+            }else{
+                if constexpr(graphType==GraphType::Uni){
+                    _RemoveUniConnection(arg);
+                }else{
+                    _RemoveBidConnection(arg);
+                }
+            }
+        }
 
     public:
         BFSPath(Path tablePath);
@@ -125,12 +141,9 @@ namespace BFSPathLib
                 throw std::runtime_error("Relationship does not exist: " + name);
             }
             auto linetoken=shizuku::util::string::Split(fullLine,' ');
-            int constexpr op=_GetFuncIndexByTemplate<optype,graphtype,true>();
             DoConnectionOpArgPack arg={std::span(linetoken)[1],std::span(linetoken).subspan(2),std::span(linetoken).subspan(1)};
-
-            constexpr MemberHandler handler = HandlerTable[((op >> 1) & 0b01)][(op&0b01)];
-            (this->*handler)(arg);
-            
+            constexpr Optype trueOP=((optype==OpType::Add)?OpType::Rem:OpType::Add);
+            _FuncHandler<trueOP,graphtype(arg);
         }
         bool ReadGraph();
         Graph GetGraph();
