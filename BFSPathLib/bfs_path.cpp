@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <span>
 #include <ranges>
+#include <queue>
 #include "file.hpp"
 #include "string.hpp"
 
@@ -28,7 +29,12 @@ namespace BFSPathLib
             string name;
             string content;
         };
-        
+        struct NodeInfo
+        {
+            string parent;
+            int hops = -1;
+        };
+
         Graph _graph;
         Path _tablePath;
         vector<RelationshipLine> _graphText;
@@ -108,7 +114,7 @@ namespace BFSPathLib
             Bid
         };
         template <OpType optype, GraphType graphtype>
-        void _AddRelationshipText(const string &name, const vector<string> &endposes, const string &beginPos="")
+        void _AddRelationshipText(const string &name, const vector<string> &endposes, const string &beginPos = "")
         {
             constexpr int ot = (optype == OpType::Add) ? 0 : 1;
             constexpr int og = (graphtype == GraphType::Uni) ? 0 : 1;
@@ -137,24 +143,24 @@ namespace BFSPathLib
 
             line.insert(line.end(), endposes.begin(), endposes.end());
             _graphText.push_back(RelationshipLine{
-                .name=fullName,
-                .content=Join(line, " ")
-            });
+                .name = fullName,
+                .content = Join(line, " ")});
         }
-        void _SetTextsToVector(){
+        void _SetTextsToVector()
+        {
             vector<string> lines = File::ReadAllLines(_tablePath);
-            for(const string &line:lines){
-                string name=string(shizuku::util::string::view::Split(line,' ')[0]);
+            for (const string &line : lines)
+            {
+                string name = string(shizuku::util::string::view::Split(line, ' ')[0]);
                 _SetName(name);
                 _graphText.push_back(RelationshipLine{
-                    .name=name,
-                    .content=line
-                });
+                    .name = name,
+                    .content = line});
             }
         }
 
     public:
-        BFSPath(Path tablePath): _tablePath(move(tablePath))
+        BFSPath(Path tablePath) : _tablePath(move(tablePath))
         {
             if (!File::Exists(_tablePath))
             {
@@ -167,34 +173,39 @@ namespace BFSPathLib
             string fullName = "+" + name;
             _SetName(fullName);
             _AddUniConnection(beginPos, span(endPoses));
-            _AddRelationshipText<OpType::Add,GraphType::Uni>(name,endPoses,beginPos);
+            _AddRelationshipText<OpType::Add, GraphType::Uni>(name, endPoses, beginPos);
         }
         void AddBid(const string &name, const vector<string> &vertexs)
         {
             string fullName = "*" + name;
             _SetName(fullName);
             _AddBidConnection(span(vertexs));
-            _AddRelationshipText<OpType::Add,GraphType::Bid>(name,vertexs);
+            _AddRelationshipText<OpType::Add, GraphType::Bid>(name, vertexs);
         }
-        void RemoveUni(const string &name, const string &beginPos, const vector<string> &endPoses) {
+        void RemoveUni(const string &name, const string &beginPos, const vector<string> &endPoses)
+        {
             string fullName = "-" + name;
             _SetName(fullName);
             _RemoveUniConnection(beginPos, span(endPoses));
-            _AddRelationshipText<OpType::Rem,GraphType::Uni>(name,endPoses,beginPos);
+            _AddRelationshipText<OpType::Rem, GraphType::Uni>(name, endPoses, beginPos);
         }
-        void RemoveBid(const string &name, const vector<string> &vertexs) {
-             string fullName = "/" + name;
+        void RemoveBid(const string &name, const vector<string> &vertexs)
+        {
+            string fullName = "/" + name;
             _SetName(fullName);
             _RemoveBidConnection(span(vertexs));
-            _AddRelationshipText<OpType::Rem,GraphType::Bid>(name,vertexs);
+            _AddRelationshipText<OpType::Rem, GraphType::Bid>(name, vertexs);
         }
-        void RemoveByNameAndType(const string &name) {
-            if(_names.contains(name)){
+        void RemoveByNameAndType(const string &name)
+        {
+            if (_names.contains(name))
+            {
                 _names.erase(name);
-                erase_if(_graphText,[&](const RelationshipLine &relation){
-                    return relation.name==name;
-                });
-            }else{
+                erase_if(_graphText, [&](const RelationshipLine &relation)
+                         { return relation.name == name; });
+            }
+            else
+            {
                 throw std::runtime_error("Relationship does not exist: " + name);
             }
         }
@@ -230,30 +241,62 @@ namespace BFSPathLib
                 {
                     throw std::runtime_error("Syntax error in connecting graph elements: " + s.content);
                 }
-                
             }
             return true;
         }
-        Graph GetGraph(){
+        Graph GetGraph()
+        {
             return _graph;
         }
-        Graph GetGraphWithoutIsolatedNode(){
-            auto returnGraph=_graph | std::views::filter([](const auto &kv){
-                return !kv.second.empty();
-            });
+        Graph GetGraphWithoutIsolatedNode()
+        {
+            auto returnGraph = _graph | std::views::filter([](const auto &kv)
+                                                           { return !kv.second.empty(); });
             return std::ranges::to<Graph>(returnGraph);
         }
 
-        void SaveGraphTo(Path tablePath){
-            auto savedText=_graphText
-                            |std::views::transform([](const RelationshipLine &rl){
-                                return rl.content;
-                            })
-                            |std::ranges::to<vector<string>>();
-            File::WriteAllText(tablePath,Join(savedText,"\n"));
+        void SaveGraphTo(Path tablePath)
+        {
+            auto savedText = _graphText | std::views::transform([](const RelationshipLine &rl)
+                                                                { return rl.content; }) |
+                             std::ranges::to<vector<string>>();
+            File::WriteAllText(tablePath, Join(savedText, "\n"));
         }
-        void SaveGraph(){
+        void SaveGraph()
+        {
             SaveGraphTo(_tablePath);
+        }
+        
+
+        using BFSResult = std::map<string, NodeInfo>;
+
+        BFSResult Traverse(const Graph &graph, const string &src)
+        {
+            queue<string> tovisit;
+            BFSResult result;
+            tovisit.push(src);
+            result[src] = {.parent = "", .hops = 0};
+
+            while (!tovisit.empty())
+            {
+                string current = tovisit.front();
+                tovisit.pop();
+
+                if (!graph.contains(current))
+                    continue;
+
+                for (const auto &nb : graph.at(current))
+                {
+                    if (!result.contains(nb))
+                    {
+                        result[nb] = {
+                            .parent = current,
+                            .hops = result[current].hops + 1};
+                        tovisit.push(nb);
+                    }
+                }
+            }
+            return result;
         }
     };
 
