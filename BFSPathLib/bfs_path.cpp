@@ -240,7 +240,7 @@ namespace BFSPathLib
                     }
                 }
             }
-            return BFSResult(result);
+            return BFSResult(result,src);
         }
 
 

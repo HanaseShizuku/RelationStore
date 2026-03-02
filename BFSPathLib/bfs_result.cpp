@@ -6,7 +6,10 @@
 namespace BFSPathLib
 {
     using namespace std;
-    BFSResult::BFSResult(map<string, NodeInfo> resultMap):_resultMap(move(resultMap)){}
+    BFSResult::BFSResult(map<string, NodeInfo> resultMap,const string &begin):
+    _resultMap(move(resultMap)),
+    _begin(move(begin))
+    {}
     std::vector<std::string> BFSResult::GetPath(const std::string &dest){
         vector<string> result;
         string current=dest;
@@ -18,6 +21,9 @@ namespace BFSPathLib
         }
         result.push_back(current);
         std::reverse(result.begin(),result.end());
+        if(current!=_begin){
+            return vector<string>();
+        }
         return result;
     } 
     int BFSResult::GetHopCount(const string &dest){
