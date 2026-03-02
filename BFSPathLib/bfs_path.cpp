@@ -109,6 +109,12 @@ namespace BFSPathLib
             }
             _isInstance = true;
         }
+        BFSPath BFSPath::NewGraphToFile(Path tablePath)
+        {
+            vector<uint8_t> x;
+            File::WriteAllBytes(tablePath,x);
+            return BFSPath(tablePath);
+        }
         void BFSPath::AddUni(const string &name, const string &beginPos, const vector<string> &endPoses)
         {
             string fullName = "+" + name;

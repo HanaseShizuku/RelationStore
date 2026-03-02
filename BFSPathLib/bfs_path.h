@@ -79,7 +79,7 @@ namespace BFSPathLib
 
     public:
         BFSPath(Path tablePath);
-        
+        static BFSPath NewGraphToFile(Path tablePath);
         void AddUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses);
         void AddBid(const std::string &name, const std::vector<std::string> &vertexs);
         void RemoveUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses);
