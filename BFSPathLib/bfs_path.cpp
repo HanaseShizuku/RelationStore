@@ -11,7 +11,7 @@
 #include "file.hpp"
 #include "string.hpp"
 
-namespace LightBFSPathLib
+namespace BFSPathLib
 {
     using namespace std;
     using namespace shizuku::io;
@@ -20,7 +20,7 @@ namespace LightBFSPathLib
     using Graph = map<string, set<string>>;
     using Path = fs::path;
 
-    class LightBFSPath
+    class BFSPath
     {
     private:
         struct RelationshipLine
@@ -242,6 +242,18 @@ namespace LightBFSPathLib
                 return !kv.second.empty();
             });
             return std::ranges::to<Graph>(returnGraph);
+        }
+
+        void SaveGraphTo(Path tablePath){
+            auto savedText=_graphText
+                            |std::views::transform([](const RelationshipLine &rl){
+                                return rl.content;
+                            })
+                            |std::ranges::to<vector<string>>();
+            File::WriteAllText(tablePath,Join(savedText,"\n"));
+        }
+        void SaveGraph(){
+            SaveGraphTo(_tablePath);
         }
     };
 
