@@ -7,6 +7,7 @@
 #include <span>
 #include "bfs_result.h"
 #include "string.hpp"
+#include <span>
 namespace BFSPathLib
 {
 
@@ -21,7 +22,11 @@ namespace BFSPathLib
             std::string content;
         };
         
-
+        struct DoConnectionOpArgPack{
+            std::string_view UniBeginPos;
+            std::span<const std::string> UniEndPoses;
+            std::span<const std::string> BidVertexs;
+        };
         Graph _graph;
         Path _tablePath;
         std::vector<RelationshipLine> _graphText;
@@ -32,6 +37,12 @@ namespace BFSPathLib
         void _AddBidConnection(std::span<const std::string> vertexs);
         void _RemoveUniConnection(const std::string &beginPos, std::span<const std::string> endPoses);
         void _RemoveBidConnection(std::span<const std::string> vertexs);
+
+        void _AddUniConnection(const DoConnectionOpArgPack &arg);
+        void _AddBidConnection(const DoConnectionOpArgPack &arg);
+        void _RemoveUniConnection(const DoConnectionOpArgPack &arg);
+        void _RemoveBidConnection(const DoConnectionOpArgPack &arg);
+        public:
         enum class OpType
         {
             Add,
@@ -42,23 +53,32 @@ namespace BFSPathLib
             Uni,
             Bid
         };
+        private:
+        using MemberHandler=void (BFSPath::*)(const DoConnectionOpArgPack&);
+        static constexpr MemberHandler HandlerTable[2][2] = {
+        { &BFSPath::_AddUniConnection, &BFSPath::_AddBidConnection }, // Add 对应 [0][0] 和 [0][1]
+        { &BFSPath::_RemoveUniConnection, &BFSPath::_RemoveBidConnection }  // Rem 对应 [1][0] 和 [1][1]
+        };
+
+        template <BFSPath::OpType optype, BFSPath::GraphType graphtype,bool reverse>
+        constexpr int static _GetFuncIndexByTemplate(){
+            constexpr int base = (static_cast<int>(optype) << 1) | static_cast<int>(graphtype);
+            return reverse ? (base ^ 0b11) : base;
+        }
+
+        template <OpType optype, GraphType graphtype>
+        static constexpr std::string _GetPrefixByTemplate() {
+            if constexpr (optype == OpType::Add) {
+                return (graphtype == GraphType::Uni) ? "+" : "*";
+            } else {
+                return (graphtype == GraphType::Uni) ? "-" : "/";
+            }
+        }
         template <BFSPath::OpType optype, BFSPath::GraphType graphtype>
         void _AddRelationshipText(const std::string &name, const std::vector<std::string> &endposes, const std::string &beginPos="")
         {
-            constexpr int ot = (optype == OpType::Add) ? 0 : 1;
-            constexpr int og = (graphtype == GraphType::Uni) ? 0 : 1;
-            constexpr int op_idx = (ot << 1) | og;
-
-            // 0    1    2    3     Oct
-            // 00   01   10   11    Bin
-            // AU   AB   RU   RB    Optype+GraphType
-
-            // +    -    *     /    前缀
-            // AU   RU   AB   RB    OpType+GraphType
-            // 0    2    1    3     Index
-
-            const char *symbols[] = {"+", "*", "-", "/"};
-            std::string fullName = symbols[op_idx] + name;
+            
+            std::string fullName = _GetPrefixByTemplate<optype,graphtype>() + name;
             std::vector<std::string> line;
             line.reserve(endposes.size() + (graphtype == GraphType::Uni ? 2 : 1));
             if constexpr (graphtype == GraphType::Uni)
@@ -84,7 +104,34 @@ namespace BFSPathLib
         void AddBid(const std::string &name, const std::vector<std::string> &vertexs);
         void RemoveUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses);
         void RemoveBid(const std::string &name, const std::vector<std::string> &vertexs);
-        void RemoveByNameAndType(const std::string &name);
+        template <BFSPath::OpType optype, BFSPath::GraphType graphtype>
+        void RemoveByNameAndType(const std::string &relationName)
+        {
+            std::string fullLine;
+            std::string name=_GetPrefixByTemplate<optype,graphtype>()+relationName;
+            if (_names.contains(name))
+            {
+                _names.erase(name);
+                auto it=std::find_if(_graphText.begin(),_graphText.end(),[&](const RelationshipLine &relation)
+                         { 
+                            return relation.name == name; });
+                if(it!=_graphText.end()){
+                    fullLine=it->content;
+                    _graphText.erase(it);
+                }
+            }
+            else
+            {
+                throw std::runtime_error("Relationship does not exist: " + name);
+            }
+            auto linetoken=shizuku::util::string::Split(fullLine,' ');
+            int constexpr op=_GetFuncIndexByTemplate<optype,graphtype,true>();
+            DoConnectionOpArgPack arg={std::span(linetoken)[1],std::span(linetoken).subspan(2),std::span(linetoken).subspan(1)};
+
+            constexpr MemberHandler handler = HandlerTable[((op >> 1) & 0b01)][(op&0b01)];
+            (this->*handler)(arg);
+            
+        }
         bool ReadGraph();
         Graph GetGraph();
         Graph GetGraphWithoutIsolatedNode();
@@ -92,6 +139,7 @@ namespace BFSPathLib
         void SaveGraphTo(Path tablePath);
         void SaveGraph();
         BFSResult Traverse(const std::string &src);
+        
     };
 
 }

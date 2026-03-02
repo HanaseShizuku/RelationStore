@@ -87,7 +87,31 @@ namespace BFSPathLib
                 }
             }
         }
-        
+
+        void BFSPath::_AddUniConnection(const DoConnectionOpArgPack &arg)
+        {
+            std::cout<<"AddUni"<<endl;
+            _AddUniConnection(shizuku::util::string::view::FromView(arg.UniBeginPos),arg.UniEndPoses);
+        }
+
+        void BFSPath::_AddBidConnection(const DoConnectionOpArgPack &arg)
+        {   
+            std::cout<<"AddBid"<<endl;
+            _AddBidConnection(arg.BidVertexs);
+        }
+
+        void BFSPath::_RemoveUniConnection(const DoConnectionOpArgPack &arg)
+        {
+            std::cout<<"RemUni"<<endl;
+            _RemoveUniConnection(shizuku::util::string::view::FromView(arg.UniBeginPos),arg.UniEndPoses);
+        }
+
+        void BFSPath::_RemoveBidConnection(const DoConnectionOpArgPack &arg)
+        {
+            std::cout<<"RemBid"<<endl;
+            _RemoveBidConnection(arg.BidVertexs);
+        }
+
         void BFSPath::_SetTextsToVector()
         {
             vector<string> lines = File::ReadAllLines(_tablePath);
@@ -143,19 +167,7 @@ namespace BFSPathLib
             _RemoveBidConnection(span(vertexs));
             _AddRelationshipText<OpType::Rem, GraphType::Bid>(name, vertexs);
         }
-        void BFSPath::RemoveByNameAndType(const string &name)
-        {
-            if (_names.contains(name))
-            {
-                _names.erase(name);
-                erase_if(_graphText, [&](const RelationshipLine &relation)
-                         { return relation.name == name; });
-            }
-            else
-            {
-                throw std::runtime_error("Relationship does not exist: " + name);
-            }
-        }
+        
         bool BFSPath::ReadGraph()
         {
             _SetTextsToVector();
