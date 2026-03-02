@@ -11,6 +11,7 @@
 #include <queue>
 #include "file.hpp"
 #include "string.hpp"
+#include "bfs_result.h"
 
 namespace BFSPathLib
 {
@@ -29,11 +30,7 @@ namespace BFSPathLib
             string name;
             string content;
         };
-        struct NodeInfo
-        {
-            string parent;
-            int hops = -1;
-        };
+        
 
         Graph _graph;
         Path _tablePath;
@@ -268,12 +265,10 @@ namespace BFSPathLib
         }
         
 
-        using BFSResult = std::map<string, NodeInfo>;
-
         BFSResult Traverse(const Graph &graph, const string &src)
         {
             queue<string> tovisit;
-            BFSResult result;
+            std::map<string, NodeInfo> result;
             tovisit.push(src);
             result[src] = {.parent = "", .hops = 0};
 
@@ -296,7 +291,7 @@ namespace BFSPathLib
                     }
                 }
             }
-            return result;
+            return BFSResult(result);
         }
     };
 
