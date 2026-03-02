@@ -13,6 +13,14 @@ namespace BFSPathLib
 
     class BFS_PATH_LIB_EXPORT BFSPath
     {
+    public:
+    struct UniArgPack{
+            std::string_view BeginPos;
+            std::span<const std::string> EndPoses;
+        };
+        struct BidArgPack{
+            std::span<const std::string> Poses;
+        };
     private:
         using Graph = std::map<std::string, std::set<std::string>>;
         using Path = std::filesystem::path;
@@ -26,6 +34,12 @@ namespace BFSPathLib
             std::string_view UniBeginPos;
             std::span<const std::string> UniEndPoses;
             std::span<const std::string> BidVertexs;
+            DoConnectionOpArgPack(const std::string_view &uniBeginPos,const std::span<const std::string> &uniEndPoses,const std::span<const std::string> &BidVertexs):
+                UniBeginPos(uniBeginPos),
+                UniEndPoses(uniEndPoses),
+                BidVertexs(BidVertexs){}
+            DoConnectionOpArgPack(const UniArgPack& p) : UniBeginPos(p.BeginPos), UniEndPoses(p.EndPoses) {}
+            DoConnectionOpArgPack(const BidArgPack& p) : BidVertexs(p.Poses) {}
         };
         Graph _graph;
         Path _tablePath;
@@ -95,8 +109,14 @@ namespace BFSPathLib
                 .name = fullName,
                 .content = shizuku::util::string::Join(line, " ")});
         }
+        void _AddRelationshipText(const std::string &fullName, const std::vector<std::string> &elementAfterPrefix)
+        {
+            _graphText.push_back(RelationshipLine{
+                .name = fullName,
+                .content = shizuku::util::string::Join(elementAfterPrefix, " ")});
+        }
         void _SetTextsToVector();
-        template <BFSPath::OpType optype, BFSPath::GraphType graphtype>
+        template <BFSPath::OpType optype, BFSPath::GraphType graphType>
         void _FuncHandler(DoConnectionOpArgPack &arg){
             if constexpr(optype==OpType::Add){
                 if constexpr(graphType==GraphType::Uni){
@@ -120,6 +140,24 @@ namespace BFSPathLib
         void AddBid(const std::string &name, const std::vector<std::string> &vertexs);
         void RemoveUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses);
         void RemoveBid(const std::string &name, const std::vector<std::string> &vertexs);
+        
+        template<BFSPath::OpType optype, BFSPath::GraphType graphtype>
+        void MakeRelationship(const std::string &relationName,std::conditional_t<graphtype==GraphType::Uni,UniArgPack,BidArgPack> graphArg){
+            constexpr std::string prefix=_GetPrefixByTemplate<optype,graphtype>();
+            std::string fullName = prefix + relationName;
+            _SetName(fullName);
+            _FuncHandler<optype,graphtype>( graphArg);
+            std::vector<std::string> postelement;
+            if constexpr(graphtype==GraphType::Uni){
+                postelement.reserve(1);
+                postelement={graphArg.BeginPos,graphArg.EndPoses};      
+            }else{
+                postelement={graphArg.Poses};
+            }
+            _AddRelationshipText(fullName,postelement);
+            
+        }
+
         template <BFSPath::OpType optype, BFSPath::GraphType graphtype>
         void RemoveByNameAndType(const std::string &relationName)
         {
@@ -141,9 +179,9 @@ namespace BFSPathLib
                 throw std::runtime_error("Relationship does not exist: " + name);
             }
             auto linetoken=shizuku::util::string::Split(fullLine,' ');
-            DoConnectionOpArgPack arg={std::span(linetoken)[1],std::span(linetoken).subspan(2),std::span(linetoken).subspan(1)};
-            constexpr Optype trueOP=((optype==OpType::Add)?OpType::Rem:OpType::Add);
-            _FuncHandler<trueOP,graphtype(arg);
+            DoConnectionOpArgPack arg=DoConnectionOpArgPack(std::span(linetoken)[1],std::span(linetoken).subspan(2),std::span(linetoken).subspan(1));
+            constexpr OpType trueOP=((optype==OpType::Add)?OpType::Rem:OpType::Add);
+            _FuncHandler<trueOP,graphtype>(arg);
         }
         bool ReadGraph();
         Graph GetGraph();
