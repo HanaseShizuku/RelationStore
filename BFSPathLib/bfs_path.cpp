@@ -154,7 +154,7 @@ namespace BFSPathLib
         }
 
     public:
-        LightBFSPath(Path tablePath) : _tablePath(move(tablePath))
+        BFSPath(Path tablePath): _tablePath(move(tablePath))
         {
             if (!File::Exists(_tablePath))
             {
