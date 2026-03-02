@@ -7,6 +7,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <span>
+#include <ranges>
 #include "file.hpp"
 #include "string.hpp"
 
@@ -22,9 +23,15 @@ namespace LightBFSPathLib
     class LightBFSPath
     {
     private:
+        struct RelationshipLine
+        {
+            string name;
+            string content;
+        };
+        
         Graph _graph;
         Path _tablePath;
-        vector<string> _graphText;
+        vector<RelationshipLine> _graphText;
         set<string> _names;
         bool _isInstance = false;
         void _SetName(const string &name)
@@ -129,7 +136,21 @@ namespace LightBFSPathLib
             }
 
             line.insert(line.end(), endposes.begin(), endposes.end());
-            _graphText.push_back(Join(line, " "));
+            _graphText.push_back(RelationshipLine{
+                .name=fullName,
+                .content=Join(line, " ")
+            });
+        }
+        void _SetTextsToVector(){
+            vector<string> lines = File::ReadAllLines(_tablePath);
+            for(const string &line:lines){
+                string name=string(shizuku::util::string::view::Split(line,' ')[0]);
+                _SetName(name);
+                _graphText.push_back(RelationshipLine{
+                    .name=name,
+                    .content=line
+                });
+            }
         }
 
     public:
@@ -167,17 +188,27 @@ namespace LightBFSPathLib
             _RemoveBidConnection(span(vertexs));
             _AddRelationshipText<OpType::Rem,GraphType::Bid>(name,vertexs);
         }
-        
+        void RemoveByNameAndType(const string &name) {
+            if(_names.contains(name)){
+                _names.erase(name);
+                erase_if(_graphText,[&](const RelationshipLine &relation){
+                    return relation.name==name;
+                });
+            }else{
+                throw std::runtime_error("Relationship does not exist: " + name);
+            }
+        }
         bool ReadGraph()
         {
-            _graphText = File::ReadAllLines(_tablePath);
+            _SetTextsToVector();
             for (const auto &s : _graphText)
             {
-                auto lineFull = Split(s, ' ');
+                auto lineFull = Split(s.content, ' ');
                 if (lineFull.size() < 3)
                 {
-                    throw std::runtime_error("Each line shall contain at least 2 elements excluding the connection mode identifier: " + s);
+                    throw std::runtime_error("Each line shall contain at least 2 elements excluding the connection mode identifier: " + s.content);
                 }
+                _SetName(lineFull[0]);
                 auto lineElement = span(lineFull).subspan(1);
                 if (StartsWith(lineFull[0], "*"))
                 {
@@ -197,11 +228,20 @@ namespace LightBFSPathLib
                 }
                 else
                 {
-                    throw std::runtime_error("Syntax error in connecting graph elements: " + s);
+                    throw std::runtime_error("Syntax error in connecting graph elements: " + s.content);
                 }
-                _SetName(lineFull[0]);
+                
             }
             return true;
+        }
+        Graph GetGraph(){
+            return _graph;
+        }
+        Graph GetGraphWithoutIsolatedNode(){
+            auto returnGraph=_graph | std::views::filter([](const auto &kv){
+                return !kv.second.empty();
+            });
+            return std::ranges::to<Graph>(returnGraph);
         }
     };
 
