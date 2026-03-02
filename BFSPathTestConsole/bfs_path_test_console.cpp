@@ -85,6 +85,10 @@ void TestSave(){
     bfsp->SaveGraph();
 }
 
+void DeleteRelation(){
+    bfsp->RemoveByNameAndType("*无向边双向连接测试");
+}
+
 void SaveFinalResultStr(stringstream &ss,unique_ptr<BFSPath> &bfs){
     ConnectTest("全连通1","全连通2",ss,bfs);
     ConnectTest("全连通1","全连通3",ss,bfs);
@@ -112,7 +116,8 @@ int main(){
     ss2>>aftersave;
 
     cout<<"Before==After:"<<(beforesave==aftersave?"Yes":"No")<<endl;
-    
+    DeleteRelation();
+    bfsp->SaveGraphTo("test_afterdel.txt");
 
 
 }
