@@ -89,7 +89,7 @@ void DeleteRelation(){
     cout<<endl<<"#####删除测试#####"<<endl;
     cout<<endl<<"===删除前==="<<endl;
     ConnectTest("无向图节点1","无向图节点2");
-    bfsp->RemoveByNameAndType<BFSPath::OpType::Add,BFSPath::GraphType::Bid>("无向边双向连接测试");
+    bfsp->UndoAddBid("无向边双向连接测试");
     cout<<endl<<"===删除后==="<<endl;
     ConnectTest("无向图节点1","无向图节点2");
 }
@@ -105,7 +105,6 @@ int main(){
     TestNew();
     //测逻辑
     TestLogic();
-    
     cout<<endl<<"#####保存读取#####"<<endl;
     stringstream ss1;
     SaveFinalResultStr(ss1,bfsp);

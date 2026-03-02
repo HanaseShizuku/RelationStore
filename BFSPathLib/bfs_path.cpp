@@ -151,7 +151,27 @@ namespace BFSPathLib
         {
             _MakeRelationship<OpType::Rem,GraphType::Bid>(name,BidArgPack{.Poses=vertexs});
         }
-        
+
+        void BFSPath::UndoAddUni(const std::string &name)
+        {
+            _RemoveByNameAndType<OpType::Add,GraphType::Uni>(name);
+        }
+
+        void BFSPath::UndoAddBid(const std::string &name)
+        {
+            _RemoveByNameAndType<OpType::Add,GraphType::Bid>(name);
+        }
+
+        void BFSPath::UndoRemoveUni(const std::string &name)
+        {
+            _RemoveByNameAndType<OpType::Rem,GraphType::Uni>(name);
+        }
+
+        void BFSPath::UndoRemoveBid(const std::string &name)
+        {
+            _RemoveByNameAndType<OpType::Rem,GraphType::Bid>(name);
+        }
+
         bool BFSPath::ReadGraph()
         {
             _SetTextsToVector();
