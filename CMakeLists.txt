@@ -6,4 +6,4 @@ project(BFSPath)
 
 # 添加子目录
 add_subdirectory(RelationStoreLib)
-add_subdirectory(RelationStoreTestConsole)
+add_subdirectory(demo)
