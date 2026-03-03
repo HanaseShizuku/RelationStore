@@ -18,6 +18,7 @@ namespace RelationStoreLib
     using namespace std;
     using namespace shizuku::io;
     using namespace shizuku::util::string;
+    using namespace Syntax;
     namespace fs = std::filesystem;
     using Graph = map<string, set<string>>;
     using Path = fs::path;

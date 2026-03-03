@@ -34,23 +34,23 @@ namespace RelationStoreLib
         void _RemoveUniConnection(const std::string &beginPos, std::span<const std::string> endPoses);
         void _RemoveBidConnection(std::span<const std::string> vertexs);
 
-        void _AddUniConnection(const DoConnectionOpArgPack &arg);
-        void _AddBidConnection(const DoConnectionOpArgPack &arg);
-        void _RemoveUniConnection(const DoConnectionOpArgPack &arg);
-        void _RemoveBidConnection(const DoConnectionOpArgPack &arg);
+        void _AddUniConnection(const Syntax::DoConnectionOpArgPack &arg);
+        void _AddBidConnection(const Syntax::DoConnectionOpArgPack &arg);
+        void _RemoveUniConnection(const Syntax::DoConnectionOpArgPack &arg);
+        void _RemoveBidConnection(const Syntax::DoConnectionOpArgPack &arg);
         
 
-        template <OpType optype, GraphType graphtype>
+        template <Syntax::OpType optype, Syntax::GraphType graphtype>
         static constexpr std::string_view _GetPrefixByTemplate();
-        template <OpType optype, GraphType graphtype>
+        template <Syntax::OpType optype, Syntax::GraphType graphtype>
         void _AddRelationshipText(const std::string &name, const std::vector<std::string> &endposes, const std::string &beginPos = "");
         void _AddRelationshipText(const std::string &fullName, const std::vector<std::string> &fullVector);
         void _SetTextsToVector();
-        template <OpType optype, GraphType graphType>
-        void _FuncHandler(const DoConnectionOpArgPack &arg);
-        template <OpType optype, GraphType graphtype>
-        void _MakeRelationship(const std::string &relationName, std::conditional_t<graphtype == GraphType::Uni, UniArgPack, BidArgPack> graphArg);
-        template <OpType optype, GraphType graphtype>
+        template <Syntax::OpType optype, Syntax::GraphType graphType>
+        void _FuncHandler(const Syntax::DoConnectionOpArgPack &arg);
+        template <Syntax::OpType optype, Syntax::GraphType graphtype>
+        void _MakeRelationship(const std::string &relationName, std::conditional_t<graphtype == Syntax::GraphType::Uni, Syntax::UniArgPack, Syntax::BidArgPack> graphArg);
+        template <Syntax::OpType optype, Syntax::GraphType graphtype>
         void _RemoveByNameAndType(const std::string &relationName);
 
     public:
