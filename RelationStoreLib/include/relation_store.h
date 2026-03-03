@@ -1,16 +1,15 @@
 #pragma once
-#include "bfs_path_lib_export.h"
+#include "relation_store_lib_export.h"
 #include <set>
 #include <filesystem>
 #include <vector>
 #include<string>
 #include<map>
 #include<span>
-#include "bfs_result.h"
-namespace BFSPathLib
+namespace RelationStoreLib
 {
 
-    class BFS_PATH_LIB_EXPORT BFSPath
+    class RELATION_STORE_LIB_EXPORT RelationStore
     {
     private:
         struct UniArgPack
@@ -67,20 +66,20 @@ namespace BFSPathLib
 
         template <OpType optype, GraphType graphtype>
         static constexpr std::string_view _GetPrefixByTemplate();
-        template <BFSPath::OpType optype, BFSPath::GraphType graphtype>
+        template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
         void _AddRelationshipText(const std::string &name, const std::vector<std::string> &endposes, const std::string &beginPos = "");
         void _AddRelationshipText(const std::string &fullName, const std::vector<std::string> &fullVector);
         void _SetTextsToVector();
-        template <BFSPath::OpType optype, BFSPath::GraphType graphType>
+        template <RelationStore::OpType optype, RelationStore::GraphType graphType>
         void _FuncHandler(const DoConnectionOpArgPack &arg);
-        template <BFSPath::OpType optype, BFSPath::GraphType graphtype>
+        template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
         void _MakeRelationship(const std::string &relationName, std::conditional_t<graphtype == GraphType::Uni, UniArgPack, BidArgPack> graphArg);
-        template <BFSPath::OpType optype, BFSPath::GraphType graphtype>
+        template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
         void _RemoveByNameAndType(const std::string &relationName);
 
     public:
-        BFSPath(Path tablePath);
-        static BFSPath NewGraphToFile(Path tablePath);
+        RelationStore(Path tablePath);
+        static RelationStore NewGraphToFile(Path tablePath);
         void AddUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses);
         void AddBid(const std::string &name, const std::vector<std::string> &vertexs);
         void RemoveUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses);
@@ -97,7 +96,6 @@ namespace BFSPathLib
 
         void SaveGraphTo(Path tablePath);
         void SaveGraph();
-        BFSResult Traverse(const std::string &src);
     };
 
 }

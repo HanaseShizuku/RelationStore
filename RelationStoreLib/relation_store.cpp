@@ -9,12 +9,11 @@
 #include <span>
 #include <ranges>
 #include <queue>
-#include "file.hpp"
-#include "string.hpp"
-#include "bfs_result.h"
-#include "bfs_path.h"
+#include "utils/file.hpp"
+#include "utils/string.hpp"
+#include "include/relation_store.h"
 
-namespace BFSPathLib
+namespace RelationStoreLib
 {
     using namespace std;
     using namespace shizuku::io;
@@ -23,7 +22,7 @@ namespace BFSPathLib
     using Graph = map<string, set<string>>;
     using Path = fs::path;
 
-    void BFSPath::_SetName(const string &name)
+    void RelationStore::_SetName(const string &name)
     {
         if (!_names.contains(name))
         {
@@ -34,7 +33,7 @@ namespace BFSPathLib
             throw std::runtime_error("Connection relationship names must be unique: " + name);
         }
     }
-    void BFSPath::_AddUniConnection(const string &beginPos, span<const string> endPoses)
+    void RelationStore::_AddUniConnection(const string &beginPos, span<const string> endPoses)
     {
         // 行内除连接方式标识符以外的所有元素与第一个元素单向连接 方向:第一个元素->别的元素
         for (const auto &endPos : endPoses)
@@ -42,7 +41,7 @@ namespace BFSPathLib
             _graph[beginPos].insert(endPos);
         }
     }
-    void BFSPath::_AddBidConnection(span<const string> vertexs)
+    void RelationStore::_AddBidConnection(span<const string> vertexs)
     {
         // 行内除连接方式标识符以外的元素全连接
         for (size_t i = 0; i < vertexs.size(); ++i)
@@ -56,7 +55,7 @@ namespace BFSPathLib
             }
         }
     }
-    void BFSPath::_RemoveUniConnection(const string &beginPos, span<const string> endPoses)
+    void RelationStore::_RemoveUniConnection(const string &beginPos, span<const string> endPoses)
     {
         // 删除行内除连接方式标识符以外的所有元素与第一个元素的单向连接 删除方向:第一个元素->别的元素
         for (const auto &endPos : endPoses)
@@ -64,7 +63,7 @@ namespace BFSPathLib
             _graph[beginPos].erase(endPos);
         }
     }
-    void BFSPath::_RemoveBidConnection(span<const string> vertexs)
+    void RelationStore::_RemoveBidConnection(span<const string> vertexs)
     {
         // 删除行内除连接方式标识符以外的所有元素的互相所有连接关系
         for (size_t i = 0; i < vertexs.size(); ++i)
@@ -87,34 +86,34 @@ namespace BFSPathLib
         }
     }
 
-    void BFSPath::_AddUniConnection(const DoConnectionOpArgPack &arg)
+    void RelationStore::_AddUniConnection(const DoConnectionOpArgPack &arg)
     {
         _AddUniConnection(shizuku::util::string::view::FromView(arg.UniBeginPos), arg.UniEndPoses);
     }
 
-    void BFSPath::_AddBidConnection(const DoConnectionOpArgPack &arg)
+    void RelationStore::_AddBidConnection(const DoConnectionOpArgPack &arg)
     {
         _AddBidConnection(arg.BidVertexs);
     }
 
-    void BFSPath::_RemoveUniConnection(const DoConnectionOpArgPack &arg)
+    void RelationStore::_RemoveUniConnection(const DoConnectionOpArgPack &arg)
     {
         _RemoveUniConnection(shizuku::util::string::view::FromView(arg.UniBeginPos), arg.UniEndPoses);
     }
 
-    void BFSPath::_RemoveBidConnection(const DoConnectionOpArgPack &arg)
+    void RelationStore::_RemoveBidConnection(const DoConnectionOpArgPack &arg)
     {
         _RemoveBidConnection(arg.BidVertexs);
     }
 
-    void BFSPath::_AddRelationshipText(const std::string &fullName, const std::vector<std::string> &fullVector)
+    void RelationStore::_AddRelationshipText(const std::string &fullName, const std::vector<std::string> &fullVector)
     {
         _graphText.push_back(RelationshipLine{
             .name = fullName,
             .content = shizuku::util::string::Join(fullVector, " ")});
     }
 
-    void BFSPath::_SetTextsToVector()
+    void RelationStore::_SetTextsToVector()
     {
         vector<string> lines = File::ReadAllLines(_tablePath);
         for (const string &line : lines)
@@ -127,7 +126,7 @@ namespace BFSPathLib
         }
     }
 
-    BFSPath::BFSPath(Path tablePath) : _tablePath(move(tablePath))
+    RelationStore::RelationStore(Path tablePath) : _tablePath(move(tablePath))
     {
         if (!File::Exists(_tablePath))
         {
@@ -135,50 +134,50 @@ namespace BFSPathLib
         }
         _isInstance = true;
     }
-    BFSPath BFSPath::NewGraphToFile(Path tablePath)
+    RelationStore RelationStore::NewGraphToFile(Path tablePath)
     {
         vector<uint8_t> x;
         File::WriteAllBytes(tablePath, x);
-        return BFSPath(tablePath);
+        return RelationStore(tablePath);
     }
-    void BFSPath::AddUni(const string &name, const string &beginPos, const vector<string> &endPoses)
+    void RelationStore::AddUni(const string &name, const string &beginPos, const vector<string> &endPoses)
     {
         _MakeRelationship<OpType::Add, GraphType::Uni>(name, UniArgPack{.BeginPos = beginPos, .EndPoses = endPoses});
     }
-    void BFSPath::AddBid(const string &name, const vector<string> &vertexs)
+    void RelationStore::AddBid(const string &name, const vector<string> &vertexs)
     {
         _MakeRelationship<OpType::Add, GraphType::Bid>(name, BidArgPack{.Poses = vertexs});
     }
-    void BFSPath::RemoveUni(const string &name, const string &beginPos, const vector<string> &endPoses)
+    void RelationStore::RemoveUni(const string &name, const string &beginPos, const vector<string> &endPoses)
     {
         _MakeRelationship<OpType::Rem, GraphType::Uni>(name, UniArgPack{.BeginPos = beginPos, .EndPoses = endPoses});
     }
-    void BFSPath::RemoveBid(const string &name, const vector<string> &vertexs)
+    void RelationStore::RemoveBid(const string &name, const vector<string> &vertexs)
     {
         _MakeRelationship<OpType::Rem, GraphType::Bid>(name, BidArgPack{.Poses = vertexs});
     }
 
-    void BFSPath::UndoAddUni(const std::string &name)
+    void RelationStore::UndoAddUni(const std::string &name)
     {
         _RemoveByNameAndType<OpType::Add, GraphType::Uni>(name);
     }
 
-    void BFSPath::UndoAddBid(const std::string &name)
+    void RelationStore::UndoAddBid(const std::string &name)
     {
         _RemoveByNameAndType<OpType::Add, GraphType::Bid>(name);
     }
 
-    void BFSPath::UndoRemoveUni(const std::string &name)
+    void RelationStore::UndoRemoveUni(const std::string &name)
     {
         _RemoveByNameAndType<OpType::Rem, GraphType::Uni>(name);
     }
 
-    void BFSPath::UndoRemoveBid(const std::string &name)
+    void RelationStore::UndoRemoveBid(const std::string &name)
     {
         _RemoveByNameAndType<OpType::Rem, GraphType::Bid>(name);
     }
 
-    bool BFSPath::ReadGraph()
+    bool RelationStore::ReadGraph()
     {
         _SetTextsToVector();
         for (const auto &s : _graphText)
@@ -212,66 +211,39 @@ namespace BFSPathLib
         }
         return true;
     }
-    Graph BFSPath::GetGraph()
+    Graph RelationStore::GetGraph()
     {
         return _graph;
     }
-    Graph BFSPath::GetGraphWithoutIsolatedNode()
+    Graph RelationStore::GetGraphWithoutIsolatedNode()
     {
         auto returnGraph = _graph | std::views::filter([](const auto &kv)
                                                        { return !kv.second.empty(); });
         return std::ranges::to<Graph>(returnGraph);
     }
 
-    void BFSPath::SaveGraphTo(Path tablePath)
+    void RelationStore::SaveGraphTo(Path tablePath)
     {
         auto savedText = _graphText | std::views::transform([](const RelationshipLine &rl)
                                                             { return rl.content; }) |
                          std::ranges::to<vector<string>>();
         File::WriteAllText(tablePath, Join(savedText, "\n"));
     }
-    void BFSPath::SaveGraph()
+    void RelationStore::SaveGraph()
     {
         SaveGraphTo(_tablePath);
     }
 
-    BFSResult BFSPath::Traverse(const string &src)
-    {
-        queue<string> tovisit;
-        std::map<string, NodeInfo> result;
-        tovisit.push(src);
-        result[src] = {.parent = "", .hops = 0};
+    
 
-        while (!tovisit.empty())
-        {
-            string current = tovisit.front();
-            tovisit.pop();
-
-            if (!_graph.contains(current))
-                continue;
-
-            for (const auto &nb : _graph.at(current))
-            {
-                if (!result.contains(nb))
-                {
-                    result[nb] = {
-                        .parent = current,
-                        .hops = result[current].hops + 1};
-                    tovisit.push(nb);
-                }
-            }
-        }
-        return BFSResult(result, src);
-    }
-
-    BFSPath::DoConnectionOpArgPack::DoConnectionOpArgPack(const std::string_view &uniBeginPos, const std::span<const std::string> &uniEndPoses, const std::span<const std::string> &BidVertexs) : UniBeginPos(uniBeginPos),
+    RelationStore::DoConnectionOpArgPack::DoConnectionOpArgPack(const std::string_view &uniBeginPos, const std::span<const std::string> &uniEndPoses, const std::span<const std::string> &BidVertexs) : UniBeginPos(uniBeginPos),
                                                                                                                                                                                                   UniEndPoses(uniEndPoses),
                                                                                                                                                                                                   BidVertexs(BidVertexs) {}
 
-    BFSPath::DoConnectionOpArgPack::DoConnectionOpArgPack(const UniArgPack &p) : UniBeginPos(p.BeginPos), UniEndPoses(p.EndPoses) {}
-    BFSPath::DoConnectionOpArgPack::DoConnectionOpArgPack(const BidArgPack &p) : BidVertexs(p.Poses) {}
-    template <BFSPath::OpType optype, BFSPath::GraphType graphtype>
-    inline constexpr std::string_view BFSPath::_GetPrefixByTemplate()
+    RelationStore::DoConnectionOpArgPack::DoConnectionOpArgPack(const UniArgPack &p) : UniBeginPos(p.BeginPos), UniEndPoses(p.EndPoses) {}
+    RelationStore::DoConnectionOpArgPack::DoConnectionOpArgPack(const BidArgPack &p) : BidVertexs(p.Poses) {}
+    template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
+    inline constexpr std::string_view RelationStore::_GetPrefixByTemplate()
     {
         if constexpr (optype == OpType::Add)
         {
@@ -283,8 +255,8 @@ namespace BFSPathLib
         }
     }
 
-    template <BFSPath::OpType optype, BFSPath::GraphType graphtype>
-    void BFSPath::_AddRelationshipText(const std::string &name, const std::vector<std::string> &endposes, const std::string &beginPos)
+    template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
+    void RelationStore::_AddRelationshipText(const std::string &name, const std::vector<std::string> &endposes, const std::string &beginPos)
     {
 
         std::string fullName = _GetPrefixByTemplate<optype, graphtype>() + name;
@@ -304,8 +276,8 @@ namespace BFSPathLib
             .name = fullName,
             .content = shizuku::util::string::Join(line, " ")});
     }
-    template <BFSPath::OpType optype, BFSPath::GraphType graphType>
-    void BFSPath::_FuncHandler(const DoConnectionOpArgPack &arg)
+    template <RelationStore::OpType optype, RelationStore::GraphType graphType>
+    void RelationStore::_FuncHandler(const DoConnectionOpArgPack &arg)
     {
         if constexpr (optype == OpType::Add)
         {
@@ -330,8 +302,8 @@ namespace BFSPathLib
             }
         }
     }
-    template <BFSPath::OpType optype, BFSPath::GraphType graphtype>
-    void BFSPath::_MakeRelationship(const std::string &relationName, std::conditional_t<graphtype == GraphType::Uni, UniArgPack, BidArgPack> graphArg)
+    template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
+    void RelationStore::_MakeRelationship(const std::string &relationName, std::conditional_t<graphtype == GraphType::Uni, UniArgPack, BidArgPack> graphArg)
     {
         constexpr auto prefix = _GetPrefixByTemplate<optype, graphtype>();
         std::string fullName = prefix + relationName;
@@ -362,8 +334,8 @@ namespace BFSPathLib
         }
         _AddRelationshipText(fullName, postelement);
     }
-    template <BFSPath::OpType optype, BFSPath::GraphType graphtype>
-    void BFSPath::_RemoveByNameAndType(const std::string &relationName)
+    template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
+    void RelationStore::_RemoveByNameAndType(const std::string &relationName)
     {
         std::string fullLine;
         std::string name = _GetPrefixByTemplate<optype, graphtype>() + relationName;

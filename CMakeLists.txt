@@ -5,5 +5,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project(BFSPath)
 
 # 添加子目录
-add_subdirectory(BFSPathLib)
-add_subdirectory(BFSPathTestConsole)
+add_subdirectory(RelationStoreLib)
+add_subdirectory(RelationStoreTestConsole)
