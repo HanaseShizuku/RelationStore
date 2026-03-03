@@ -236,13 +236,8 @@ namespace RelationStoreLib
 
     
 
-    RelationStore::DoConnectionOpArgPack::DoConnectionOpArgPack(const std::string_view &uniBeginPos, const std::span<const std::string> &uniEndPoses, const std::span<const std::string> &BidVertexs) : UniBeginPos(uniBeginPos),
-                                                                                                                                                                                                  UniEndPoses(uniEndPoses),
-                                                                                                                                                                                                  BidVertexs(BidVertexs) {}
-
-    RelationStore::DoConnectionOpArgPack::DoConnectionOpArgPack(const UniArgPack &p) : UniBeginPos(p.BeginPos), UniEndPoses(p.EndPoses) {}
-    RelationStore::DoConnectionOpArgPack::DoConnectionOpArgPack(const BidArgPack &p) : BidVertexs(p.Poses) {}
-    template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
+    
+    template <OpType optype, GraphType graphtype>
     inline constexpr std::string_view RelationStore::_GetPrefixByTemplate()
     {
         if constexpr (optype == OpType::Add)
@@ -255,7 +250,7 @@ namespace RelationStoreLib
         }
     }
 
-    template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
+    template <OpType optype, GraphType graphtype>
     void RelationStore::_AddRelationshipText(const std::string &name, const std::vector<std::string> &endposes, const std::string &beginPos)
     {
 
@@ -276,7 +271,7 @@ namespace RelationStoreLib
             .name = fullName,
             .content = shizuku::util::string::Join(line, " ")});
     }
-    template <RelationStore::OpType optype, RelationStore::GraphType graphType>
+    template <OpType optype, GraphType graphType>
     void RelationStore::_FuncHandler(const DoConnectionOpArgPack &arg)
     {
         if constexpr (optype == OpType::Add)
@@ -302,7 +297,7 @@ namespace RelationStoreLib
             }
         }
     }
-    template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
+    template <OpType optype, GraphType graphtype>
     void RelationStore::_MakeRelationship(const std::string &relationName, std::conditional_t<graphtype == GraphType::Uni, UniArgPack, BidArgPack> graphArg)
     {
         constexpr auto prefix = _GetPrefixByTemplate<optype, graphtype>();
@@ -334,7 +329,7 @@ namespace RelationStoreLib
         }
         _AddRelationshipText(fullName, postelement);
     }
-    template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
+    template <OpType optype, GraphType graphtype>
     void RelationStore::_RemoveByNameAndType(const std::string &relationName)
     {
         std::string fullLine;

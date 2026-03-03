@@ -6,6 +6,7 @@ add_library(relation_store_lib SHARED
     algorithm/bfs_result.cpp include/bfs_result.h
     utils/file.hpp
     utils/string.hpp
+    syntax_parse.cpp include/syntax_parse.h
 )
 
 generate_export_header(relation_store_lib)

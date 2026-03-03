@@ -6,21 +6,14 @@
 #include<string>
 #include<map>
 #include<span>
+#include"syntax_parse.h"
 namespace RelationStoreLib
 {
 
     class RELATION_STORE_LIB_EXPORT RelationStore
     {
     private:
-        struct UniArgPack
-        {
-            std::string_view BeginPos;
-            std::span<const std::string> EndPoses;
-        };
-        struct BidArgPack
-        {
-            std::span<const std::string> Poses;
-        };
+        
         using Graph = std::map<std::string, std::set<std::string>>;
         using Path = std::filesystem::path;
         struct RelationshipLine
@@ -29,15 +22,7 @@ namespace RelationStoreLib
             std::string content;
         };
 
-        struct DoConnectionOpArgPack
-        {
-            std::string_view UniBeginPos;
-            std::span<const std::string> UniEndPoses;
-            std::span<const std::string> BidVertexs;
-            DoConnectionOpArgPack(const std::string_view &uniBeginPos, const std::span<const std::string> &uniEndPoses, const std::span<const std::string> &BidVertexs);
-            DoConnectionOpArgPack(const UniArgPack &p);
-            DoConnectionOpArgPack(const BidArgPack &p);
-        };
+        
         Graph _graph;
         Path _tablePath;
         std::vector<RelationshipLine> _graphText;
@@ -53,28 +38,19 @@ namespace RelationStoreLib
         void _AddBidConnection(const DoConnectionOpArgPack &arg);
         void _RemoveUniConnection(const DoConnectionOpArgPack &arg);
         void _RemoveBidConnection(const DoConnectionOpArgPack &arg);
-        enum class OpType
-        {
-            Add,
-            Rem
-        };
-        enum class GraphType
-        {
-            Uni,
-            Bid
-        };
+        
 
         template <OpType optype, GraphType graphtype>
         static constexpr std::string_view _GetPrefixByTemplate();
-        template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
+        template <OpType optype, GraphType graphtype>
         void _AddRelationshipText(const std::string &name, const std::vector<std::string> &endposes, const std::string &beginPos = "");
         void _AddRelationshipText(const std::string &fullName, const std::vector<std::string> &fullVector);
         void _SetTextsToVector();
-        template <RelationStore::OpType optype, RelationStore::GraphType graphType>
+        template <OpType optype, GraphType graphType>
         void _FuncHandler(const DoConnectionOpArgPack &arg);
-        template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
+        template <OpType optype, GraphType graphtype>
         void _MakeRelationship(const std::string &relationName, std::conditional_t<graphtype == GraphType::Uni, UniArgPack, BidArgPack> graphArg);
-        template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
+        template <OpType optype, GraphType graphtype>
         void _RemoveByNameAndType(const std::string &relationName);
 
     public:
