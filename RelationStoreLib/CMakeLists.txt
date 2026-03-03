@@ -8,6 +8,7 @@ add_library(relation_store_lib SHARED
     utils/string.hpp
     syntax/syntax_parse.cpp include/syntax_parse.h
     syntax/syntax_nodes.cpp include/syntax_nodes.h
+    include/types.h
 )
 
 generate_export_header(relation_store_lib)

@@ -6,7 +6,9 @@
 #include<string>
 #include<map>
 #include<span>
+#include<memory>
 #include"syntax_parse.h"
+#include"syntax_nodes.h"
 namespace RelationStoreLib
 {
 
@@ -25,7 +27,7 @@ namespace RelationStoreLib
         
         Graph _graph;
         Path _tablePath;
-        std::vector<RelationshipLine> _graphText;
+        std::vector<std::unique_ptr<Syntax::GeneralSyntaxNode>> _graphText;
         std::set<std::string> _names;
         bool _isInstance = false;
         void _SetName(const std::string &name);
@@ -42,9 +44,6 @@ namespace RelationStoreLib
 
         template <Syntax::OpType optype, Syntax::GraphType graphtype>
         static constexpr std::string_view _GetPrefixByTemplate();
-        template <Syntax::OpType optype, Syntax::GraphType graphtype>
-        void _AddRelationshipText(const std::string &name, const std::vector<std::string> &endposes, const std::string &beginPos = "");
-        void _AddRelationshipText(const std::string &fullName, const std::vector<std::string> &fullVector);
         void _SetTextsToVector();
         template <Syntax::OpType optype, Syntax::GraphType graphType>
         void _FuncHandler(const Syntax::DoConnectionOpArgPack &arg);

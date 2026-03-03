@@ -1,9 +1,9 @@
 #pragma once
-#include "include/syntax_parse.h"
 #include <span>
 #include <concepts>
 #include <memory>
 #include <string>
+#include "include/types.h"
 
 namespace RelationStoreLib::Syntax
 {
@@ -19,6 +19,9 @@ namespace RelationStoreLib::Syntax
         std::string RelationName;
         virtual void Init(const std::span<std::string> &sa, const std::span<std::string> &fa) = 0;
         virtual std::string ToString() = 0;
+        DoConnectionOpArgPack GetArgs();
+        OpType GetOpType();
+        GraphType GetGraphType();
     };
 
     template <typename T>

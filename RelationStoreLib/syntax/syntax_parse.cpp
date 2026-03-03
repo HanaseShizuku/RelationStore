@@ -79,7 +79,7 @@ namespace RelationStoreLib::Syntax
         }
         return r;
     }
-    std::vector<std::unique_ptr<GeneralSyntaxNode>> Parse(std::string strs)
+    std::vector<std::unique_ptr<GeneralSyntaxNode>> RelationStoreLib::Syntax::SyntaxParser::Parse(std::string strs)
     {
         std::vector<std::string> tokens = SyntaxParser::TokenParse(strs);
         const std::vector<std::span<std::string>> nodes = SyntaxParser::SplitVectorToSpans<std::string>(tokens, ";");

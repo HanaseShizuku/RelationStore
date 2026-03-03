@@ -48,4 +48,14 @@ namespace RelationStoreLib::Syntax
     {
         return SyntaxParser::ArgPackToScriptArg<GraphType::Bid>(_ArgPack, OpName, RelationName);
     }
+    DoConnectionOpArgPack GeneralSyntaxNode::GetArgs()
+    {
+        return _ArgPack;
+    }
+    OpType GeneralSyntaxNode::GetOpType(){
+        return _Optype;
+    }
+    GraphType GeneralSyntaxNode::GetGraphType(){
+        return _GraphType;
+    }
 } // namespace RelationStoreLib

@@ -12,6 +12,7 @@
 #include "utils/file.hpp"
 #include "utils/string.hpp"
 #include "include/relation_store.h"
+#include "include/syntax_nodes.h"
 
 namespace RelationStoreLib
 {
@@ -107,23 +108,17 @@ namespace RelationStoreLib
         _RemoveBidConnection(arg.BidVertexs);
     }
 
-    void RelationStore::_AddRelationshipText(const std::string &fullName, const std::vector<std::string> &fullVector)
-    {
-        _graphText.push_back(RelationshipLine{
-            .name = fullName,
-            .content = shizuku::util::string::Join(fullVector, " ")});
-    }
 
     void RelationStore::_SetTextsToVector()
     {
-        vector<string> lines = File::ReadAllLines(_tablePath);
-        for (const string &line : lines)
+        std::string lines = File::ReadAllText(_tablePath);
+        lines=Replace(lines,"\n","");
+        std::vector<std::unique_ptr<GeneralSyntaxNode>> nodes=SyntaxParser::Parse(lines);
+        for (auto &line : nodes)
         {
-            string name = string(shizuku::util::string::view::Split(line, ' ')[0]);
+            string name = line->RelationName;
             _SetName(name);
-            _graphText.push_back(RelationshipLine{
-                .name = name,
-                .content = line});
+            _graphText.push_back(line);
         }
     }
 
@@ -183,31 +178,30 @@ namespace RelationStoreLib
         _SetTextsToVector();
         for (const auto &s : _graphText)
         {
-            auto lineFull = Split(s.content, ' ');
-            if (lineFull.size() < 3)
+            auto arg = s->GetArgs();
+            auto optype = s->GetOpType();
+            auto graphtype = s->GetGraphType();
+            if (optype == OpType::Add)
             {
-                throw std::runtime_error("Each line shall contain at least 2 elements excluding the connection mode identifier: " + s.content);
-            }
-            auto lineElement = span(lineFull).subspan(1);
-            if (StartsWith(lineFull[0], "*"))
-            {
-                _AddBidConnection(lineElement);
-            }
-            else if (StartsWith(lineFull[0], "+"))
-            {
-                _AddUniConnection(lineElement[0], span(lineElement).subspan(1));
-            }
-            else if (StartsWith(lineFull[0], "-"))
-            {
-                _RemoveUniConnection(lineElement[0], span(lineElement).subspan(1));
-            }
-            else if (StartsWith(lineFull[0], "/"))
-            {
-                _RemoveBidConnection(lineElement);
+                if (graphtype == GraphType::Uni)
+                {
+                    _FuncHandler<OpType::Add, GraphType::Uni>(arg);
+                }
+                else
+                {
+                    _FuncHandler<OpType::Add, GraphType::Bid>(arg);
+                }
             }
             else
             {
-                throw std::runtime_error("Syntax error in connecting graph elements: " + s.content);
+                if (graphtype == GraphType::Uni)
+                {
+                    _FuncHandler<OpType::Rem, GraphType::Uni>(arg);
+                }
+                else
+                {
+                    _FuncHandler<OpType::Rem, GraphType::Bid>(arg);
+                }
             }
         }
         return true;
@@ -235,9 +229,6 @@ namespace RelationStoreLib
         SaveGraphTo(_tablePath);
     }
 
-    
-
-    
     template <OpType optype, GraphType graphtype>
     inline constexpr std::string_view RelationStore::_GetPrefixByTemplate()
     {
@@ -251,27 +242,7 @@ namespace RelationStoreLib
         }
     }
 
-    template <OpType optype, GraphType graphtype>
-    void RelationStore::_AddRelationshipText(const std::string &name, const std::vector<std::string> &endposes, const std::string &beginPos)
-    {
-
-        std::string fullName = _GetPrefixByTemplate<optype, graphtype>() + name;
-        std::vector<std::string> line;
-        line.reserve(endposes.size() + (graphtype == GraphType::Uni ? 2 : 1));
-        if constexpr (graphtype == GraphType::Uni)
-        {
-            line = {fullName, beginPos};
-        }
-        else
-        {
-            line = {fullName};
-        }
-
-        line.insert(line.end(), endposes.begin(), endposes.end());
-        _graphText.push_back(RelationshipLine{
-            .name = fullName,
-            .content = shizuku::util::string::Join(line, " ")});
-    }
+    
     template <OpType optype, GraphType graphType>
     void RelationStore::_FuncHandler(const DoConnectionOpArgPack &arg)
     {
@@ -328,7 +299,8 @@ namespace RelationStoreLib
         {
             postelement.insert(postelement.end(), graphArg.Poses.begin(), graphArg.Poses.end());
         }
-        _AddRelationshipText(fullName, postelement);
+        //要判断Arg的类型并转为stringvector来构造Node,要么就去Node那里加个基于Arg的构造方法或Init虚方法
+        //_graphText.push_back()
     }
     template <OpType optype, GraphType graphtype>
     void RelationStore::_RemoveByNameAndType(const std::string &relationName)
@@ -352,7 +324,7 @@ namespace RelationStoreLib
         }
         auto linetoken = shizuku::util::string::Split(fullLine, ' ');
         std::vector<float> default_weights = {1.0f};
-        DoConnectionOpArgPack arg = DoConnectionOpArgPack(std::span(linetoken)[1], std::span(linetoken).subspan(2), std::span(linetoken).subspan(1),std::span(default_weights));
+        DoConnectionOpArgPack arg = DoConnectionOpArgPack(std::span(linetoken)[1], std::span(linetoken).subspan(2), std::span(linetoken).subspan(1), std::span(default_weights));
         constexpr OpType trueOP = ((optype == OpType::Add) ? OpType::Rem : OpType::Add);
         _FuncHandler<trueOP, graphtype>(arg);
     }
