@@ -18,9 +18,8 @@ namespace RelationStoreLib::algorithm
         };
         std::map<std::string, NodeInfo> _resultMap;
         std::string _begin;
-
-    public:
         BFSResult(std::map<std::string, NodeInfo> resultMap, const std::string &begin);
+    public:
         std::vector<std::string> GetPath(const std::string &dest);
         int GetHopCount(const std::string &dest);
         static BFSResult TraverseFromStore(const std::string &src, RelationStore &graph);
