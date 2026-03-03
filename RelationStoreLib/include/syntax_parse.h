@@ -1,6 +1,7 @@
 #pragma once
 #include<string>
 #include<span>
+#include<vector>
 namespace RelationStoreLib{
     enum class OpType
         {
@@ -15,22 +16,25 @@ namespace RelationStoreLib{
     struct UniArgPack
         {
             std::string_view BeginPos;
-            std::span<const std::string> EndPoses;
-            std::span<float> Weights;
+            std::vector<std::string> EndPoses;
+            std::vector<float> Weights;
         };
         struct BidArgPack
         {
-            std::span<const std::string> Poses;
-            std::span<float> Weight;
+            std::vector<std::string> Poses;
+            std::vector<float> Weight;
         };
     struct DoConnectionOpArgPack
         {
+
             std::string_view UniBeginPos;
-            std::span<const std::string> UniEndPoses;
-            std::span<const std::string> BidVertexs;
-            std::span<float> Weights;
-            DoConnectionOpArgPack(const std::string_view &uniBeginPos, const std::span<const std::string> &uniEndPoses, const std::span<const std::string> &BidVertexs,std::span<float> weights);
+            std::vector<std::string> UniEndPoses;
+            std::vector<std::string> BidVertexs;
+            std::vector<float> Weights;
+            DoConnectionOpArgPack(const std::string_view &uniBeginPos, const std::span<std::string> &uniEndPoses, const std::span< std::string> &BidVertexs,const std::span<float> &weights);
             DoConnectionOpArgPack(const UniArgPack &p);
             DoConnectionOpArgPack(const BidArgPack &p);
+            DoConnectionOpArgPack() = default;
         };
+        
 }

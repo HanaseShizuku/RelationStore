@@ -350,7 +350,8 @@ namespace RelationStoreLib
             throw std::runtime_error("Relationship does not exist: " + name);
         }
         auto linetoken = shizuku::util::string::Split(fullLine, ' ');
-        DoConnectionOpArgPack arg = DoConnectionOpArgPack(std::span(linetoken)[1], std::span(linetoken).subspan(2), std::span(linetoken).subspan(1));
+        std::vector<float> default_weights = {1.0f};
+        DoConnectionOpArgPack arg = DoConnectionOpArgPack(std::span(linetoken)[1], std::span(linetoken).subspan(2), std::span(linetoken).subspan(1),std::span(default_weights));
         constexpr OpType trueOP = ((optype == OpType::Add) ? OpType::Rem : OpType::Add);
         _FuncHandler<trueOP, graphtype>(arg);
     }

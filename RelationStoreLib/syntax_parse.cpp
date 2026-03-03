@@ -18,10 +18,10 @@ RmBid(Name,P1,P2)[]
 */
 
 
-DoConnectionOpArgPack::DoConnectionOpArgPack(const std::string_view &uniBeginPos, const std::span<const std::string> &uniEndPoses, const std::span<const std::string> &BidVertexs,std::span<float> weights) : UniBeginPos(uniBeginPos),
-                                                                                                                                                                                                  UniEndPoses(uniEndPoses),
-                                                                                                                                                                                                  BidVertexs(BidVertexs),
-                                                                                                                                                                                                  Weights(weights){}
+DoConnectionOpArgPack::DoConnectionOpArgPack(const std::string_view &uniBeginPos, const std::span<std::string> &uniEndPoses, const std::span< std::string> &BidVertexs,const std::span<float> &weights) : UniBeginPos(uniBeginPos),
+                                                                                                                                                                                                  UniEndPoses(std::vector(uniEndPoses.begin(),uniEndPoses.end())),
+                                                                                                                                                                                                  BidVertexs(std::vector(BidVertexs.begin(),BidVertexs.end())),
+                                                                                                                                                                                                  Weights(std::vector(weights.begin(),weights.end())){}
 
 DoConnectionOpArgPack::DoConnectionOpArgPack(const UniArgPack &p) : UniBeginPos(p.BeginPos), UniEndPoses(p.EndPoses),Weights(p.Weights) {}
 DoConnectionOpArgPack::DoConnectionOpArgPack(const BidArgPack &p) : BidVertexs(p.Poses),Weights(p.Weight){}
@@ -103,34 +103,87 @@ std::vector<std::span<T>> SplitVectorToSpans(std::vector<T>& vec, const T& delim
     return result;
 }
 
-template <typename T>
-concept IsSyntaxNode=std::is_base_of_v<GeneralSyntaxNode,T>;
+
+
 class GeneralSyntaxNode{
     protected:
     DoConnectionOpArgPack _ArgPack;
     OpType _Optype;
     GraphType _GraphType;
+    
     public:
     std::string OpName;
     std::string RelationName;
-    virtual void Init(std::span<std::string>sa,std::span<std::string>fa) = 0;
-    template <IsSyntaxNode T>
-    static std::unique_ptr<T> create(std::span<std::string>sa,std::span<std::string>fa) {
+    virtual void Init(const std::span<std::string>&sa,const std::span<std::string>&fa) = 0;
+    
+};
+template <typename T>
+concept IsSyntaxNode=std::is_base_of_v<GeneralSyntaxNode,T>;
+template <IsSyntaxNode T>
+    static std::unique_ptr<T> Create(std::span<std::string>sa,std::span<std::string>fa,const std::string &opname) {
+        std::vector<std::string> sa_filtered, fa_filtered;
+        for(auto &s : sa) if(s != ",") sa_filtered.push_back(s);
+        for(auto &f : fa) if(f != ",") fa_filtered.push_back(f);
         std::unique_ptr<T> obj = std::make_unique<T>();
-        obj->Init(std::span<std::string>,std::span<std::string>);
+        //obj->RelationName = sa_filtered[0]; 
+        //obj->OpName = opname;
+        obj->Init(sa_filtered, fa_filtered);
         return obj;
     }
-};
-
+template<GraphType graph>
+DoConnectionOpArgPack GetArgPack(const std::span<std::string>sa,const std::span<std::string>fa){
+    std::vector<float> fs;
+            for(const auto &f:fa){
+                fs.push_back(std::stof(f));
+            }
+    if constexpr(graph==GraphType::Uni){
+        auto x=sa.subspan(2);
+            std::vector<std::string> pEnd=std::vector(x.begin(),x.end());        
+            return DoConnectionOpArgPack (UniArgPack{.BeginPos=sa[1],.EndPoses=pEnd,.Weights=fs});
+    }else{
+        auto x=sa.subspan(1);
+            std::vector<std::string> pEnd=std::vector(x.begin(),x.end());
+            return DoConnectionOpArgPack (BidArgPack{.Poses=pEnd,.Weight=fs});
+    }
+}
 class AddUniNode: public GeneralSyntaxNode{
     public:
-        void Init(std::span<std::string>sa,std::span<std::string>fa) override{
+        void Init(const std::span<std::string>&sa,const std::span<std::string>&fa) override{
+            _Optype=OpType::Add;
+            _GraphType=GraphType::Uni;
+            _ArgPack=GetArgPack<GraphType::Uni>(sa,fa);
             
+        }
+};
+class AddBidNode:public GeneralSyntaxNode{
+    public:
+        void Init(const std::span<std::string>&sa,const std::span<std::string>&fa) override{
+            _Optype=OpType::Add;
+            _GraphType=GraphType::Bid;
+            _ArgPack=GetArgPack<GraphType::Bid>(sa,fa);
+        }
+};
+
+class RemUniNode: public GeneralSyntaxNode{
+    public:
+        void Init(const std::span<std::string>&sa,const std::span<std::string>&fa) override{
+            _Optype=OpType::Rem;
+            _GraphType=GraphType::Uni;
+            _ArgPack=GetArgPack<GraphType::Uni>(sa,fa);
+            
+        }
+};
+class RemBidNode:public GeneralSyntaxNode{
+    public:
+        void Init(const std::span<std::string>&sa,const std::span<std::string>&fa) override{
+            _Optype=OpType::Rem;
+            _GraphType=GraphType::Bid;
+            _ArgPack=GetArgPack<GraphType::Bid>(sa,fa);
         }
 };
 
 
-void TokenToSyntaxNode(std::span<std::string> span){
+std::unique_ptr<GeneralSyntaxNode> TokenToSyntaxNode(std::span<std::string> span){
         auto opName=span[0];
         auto sab=std::find(span.begin(),span.end(),"(");
         auto sae=std::find(span.begin(),span.end(),")");
@@ -144,16 +197,31 @@ void TokenToSyntaxNode(std::span<std::string> span){
             throw std::runtime_error("syntax error");
         }
         auto _FloatArr=std::span(&(* (fab + 1) ), &(*fae));
+        if(opName=="Uni"){
+            return Create<AddUniNode>(std::span(_StringArr),std::span(_FloatArr),opName);
+        }else if(opName=="Bid"){
+            return Create<AddBidNode>(std::span(_StringArr),std::span(_FloatArr),opName);
+        }else if(opName=="RemUni"){
+            return Create<RemUniNode>(std::span(_StringArr),std::span(_FloatArr),opName);
+        }else if(opName=="RemBid"){
+            return Create<RemBidNode>(std::span(_StringArr),std::span(_FloatArr),opName);
+        }else{
+            throw std::runtime_error("syntax error");
+        }
 }
-void TokensToSytaxNodes(){
-
+std::vector<std::unique_ptr<GeneralSyntaxNode>> TokensToSytaxNodes(const std::vector<std::span<std::string>> &nodes){
+    std::vector<std::unique_ptr<GeneralSyntaxNode>> r;
+    for(const auto &n:nodes){
+        r.push_back(TokenToSyntaxNode(n));
+    }
+    return r;
 }
-void Parse(std::string strs){
+std::vector<std::unique_ptr<GeneralSyntaxNode>> Parse(std::string strs){
     std::vector<std::string> tokens=TokenParse(strs);
     const std::vector<std::span<std::string>> nodes=SplitVectorToSpans<std::string>(tokens,";");
+    return TokensToSytaxNodes(nodes);
     //Uni ( 名字 , 起点 , 终点 ) ;
     //UniWeight ( 带引号的名字(") , 带转义符号的起点\ , 终点 ) [ weight ] ;
-
 }
 }
 
