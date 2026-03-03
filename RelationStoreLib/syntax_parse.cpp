@@ -1,6 +1,9 @@
 #include<string>
 #include<vector>
+#include"utils/string.hpp"
+#include<iostream>
 
+using namespace shizuku::util::string;
 bool IsSingleToken(const char &c){
     constexpr char car[]={'(',')','[',']',',',';','\n','\r'};
     for(const char &x:car){
@@ -12,66 +15,48 @@ bool IsSingleToken(const char &c){
     }
     return false;
 }
-//[begin,end)
-std::string SubString(std::string &str,int begin,int end){
-    return str.substr(begin,end-begin+1);
+std::string EraseEscape(const std::string &str){
+    return Replace(Replace(str,"\\\\","\\"),"\\\"","\"");
 }
 
-void TokenParse(std::string strs){
-    int b=0;
-    int i=0;
-    bool quote=false;
-    bool escape=false;
-    std::vector<std::string> nonprecessedTokens;
-    while(i<strs.size()){
-        if (quote)
-        {
-            if(strs[b]=='"'){
-                //遇到引号下的引号
-                if(escape){
-                    //转义引号
-                    //什么也不干
-                }else{
-                    //引号结束
-                    //获取之前的东西
-                    //并把转义符号换成正常符号
-                    //接着塞进token表
-                }
-            }else if(strs[b]=='\\'){
-                //引号内转义号
-                if(escape){
-                    //反斜杠
-                    //转义关 然后什么也不干
-                }else{
-                    //转义号
-                    //转义开 然后什么也不干
-                }
-            }else{
-                //引号内的正常字符
-                //什么也不干
-                //当作一整个token解析就行了
+
+std::vector<std::string> TokenParse(std::string strs){
+    int b=0, i=0;
+    bool quote=false, escape=false;
+    std::vector<std::string> tokens;
+    auto addtoken= [&](const std::string &t){
+        std::string cleaned = Trim(t);
+        if(!cleaned.empty()) tokens.push_back(cleaned);
+    };
+
+    while(i < strs.size()){
+        if (quote) {
+            if(strs[i] == '"' && !escape){
+                addtoken(EraseEscape(strs.substr(b + 1, i - b - 1)));
+                b = i + 1;
+                quote = false;
+            } else if(strs[i] == '\\' && !escape){
+                escape = true;
+            } else {
+                escape = false;
             }
-        }else{
-            if(strs[b]=='"'){
-                //字符串的开始
-                //把之前的东西塞进token表里并去除空格
-                //然后引用 开
-            }else if(IsSingleToken(strs[b])){
-                //结构字符
-                //把之前的东西塞进token表里并去除空格
-                //然后把自身塞进token表里
-            }else{
-                //非字符串情况下
-                //遇到非结构符号什么都不做就行了
-                //当一整个token解析了
-                //空格也一样
+        } else {
+            if(strs[i] == '"'){
+                addtoken(strs.substr(b, i - b));
+                b = i;
+                quote = true;
+            } else if(IsSingleToken(strs[i]) || std::isspace(strs[i])){
+                addtoken(strs.substr(b, i - b));
+                if(IsSingleToken(strs[i])) {
+                    tokens.push_back(std::string(1, strs[i]));
+                }
+                b = i + 1;
             }
         }
-
-        b++;
-        
+        i++;
     }
-    
+    addtoken(strs.substr(b));
+    return tokens;
 }
 
 void Parse(std::string strs){
