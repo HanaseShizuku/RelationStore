@@ -68,12 +68,16 @@ namespace RelationStoreLib::Syntax
     public:
         void Init(const std::span<std::string> &sa, const std::span<std::string> &fa) override;
         std::string ToString() override;
+        AddUniNode(const DoConnectionOpArgPack &arg,const std::string &relationName);
+        AddUniNode()=default;
     };
     class AddBidNode : public GeneralSyntaxNode
     {
     public:
         void Init(const std::span<std::string> &sa, const std::span<std::string> &fa) override;
         std::string ToString() override;
+        AddBidNode(const DoConnectionOpArgPack &arg,const std::string &relationName);
+        AddBidNode()=default;
     };
 
     class RemUniNode : public GeneralSyntaxNode
@@ -81,12 +85,16 @@ namespace RelationStoreLib::Syntax
     public:
         void Init(const std::span<std::string> &sa, const std::span<std::string> &fa) override;
         std::string ToString() override;
+        RemUniNode(const DoConnectionOpArgPack &arg,const std::string &relationName);
+        RemUniNode()=default;
     };
     class RemBidNode : public GeneralSyntaxNode
     {
     public:
         void Init(const std::span<std::string> &sa, const std::span<std::string> &fa) override;
         std::string ToString() override;
+         RemBidNode(const DoConnectionOpArgPack &arg,const std::string &relationName);
+         RemBidNode()=default;
     };
 
 } // namespace RelationStoreLib

@@ -18,6 +18,14 @@ namespace RelationStoreLib::Syntax
     {
         return SyntaxParser::ArgPackToScriptArg<GraphType::Uni>(_ArgPack, OpName, RelationName);
     }
+    AddUniNode::AddUniNode(const DoConnectionOpArgPack &arg, const std::string &relationName)
+    {
+        _Optype=OpType::Add;
+        OpName="Uni";
+        _GraphType=GraphType::Uni;
+        _ArgPack=arg;
+    }
+    
     void AddBidNode::Init(const std::span<std::string> &sa, const std::span<std::string> &fa)
     {
         _Optype = OpType::Add;
@@ -27,6 +35,13 @@ namespace RelationStoreLib::Syntax
     std::string AddBidNode::ToString()
     {
         return SyntaxParser::ArgPackToScriptArg<GraphType::Bid>(_ArgPack, OpName, RelationName);
+    }
+    AddBidNode::AddBidNode(const DoConnectionOpArgPack &arg, const std::string &relationName)
+    {
+        _Optype=OpType::Add;
+        OpName="Bid";
+        _GraphType=GraphType::Bid;
+        _ArgPack=arg;
     }
     void RemUniNode::Init(const std::span<std::string> &sa, const std::span<std::string> &fa)
     {
@@ -38,6 +53,13 @@ namespace RelationStoreLib::Syntax
     {
         return SyntaxParser::ArgPackToScriptArg<GraphType::Uni>(_ArgPack, OpName, RelationName);
     }
+    RemUniNode::RemUniNode(const DoConnectionOpArgPack &arg, const std::string &relationName)
+    {
+        _Optype=OpType::Rem;
+        OpName="RemUni";
+        _GraphType=GraphType::Uni;
+        _ArgPack=arg;
+    }
     void RemBidNode::Init(const std::span<std::string> &sa, const std::span<std::string> &fa)
     {
         _Optype = OpType::Rem;
@@ -47,6 +69,13 @@ namespace RelationStoreLib::Syntax
     std::string RemBidNode::ToString()
     {
         return SyntaxParser::ArgPackToScriptArg<GraphType::Bid>(_ArgPack, OpName, RelationName);
+    }
+    RemBidNode::RemBidNode(const DoConnectionOpArgPack &arg, const std::string &relationName)
+    {
+        _Optype=OpType::Rem;
+        OpName="RemBid";
+        _GraphType=GraphType::Bid;
+        _ArgPack=arg;
     }
     DoConnectionOpArgPack GeneralSyntaxNode::GetArgs()
     {

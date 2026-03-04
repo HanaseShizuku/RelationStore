@@ -118,7 +118,7 @@ namespace RelationStoreLib
         {
             string name = line->RelationName;
             _SetName(name);
-            _graphText.push_back(line);
+            _graphText.push_back(std::move(line));
         }
     }
 
@@ -219,10 +219,12 @@ namespace RelationStoreLib
 
     void RelationStore::SaveGraphTo(Path tablePath)
     {
-        auto savedText = _graphText | std::views::transform([](const RelationshipLine &rl)
-                                                            { return rl.content; }) |
-                         std::ranges::to<vector<string>>();
-        File::WriteAllText(tablePath, Join(savedText, "\n"));
+        
+        std::vector<string> s;
+        for(const auto &x:_graphText){
+            s.push_back(x->ToString());
+        }
+        File::WriteAllText(tablePath, Join(s, "\n"));
     }
     void RelationStore::SaveGraph()
     {
@@ -299,8 +301,23 @@ namespace RelationStoreLib
         {
             postelement.insert(postelement.end(), graphArg.Poses.begin(), graphArg.Poses.end());
         }
-        //要判断Arg的类型并转为stringvector来构造Node,要么就去Node那里加个基于Arg的构造方法或Init虚方法
-        //_graphText.push_back()
+        std::unique_ptr<GeneralSyntaxNode> node;
+        
+        
+        if constexpr(optype==OpType::Add){
+            if constexpr(graphtype==GraphType::Uni){
+                node=std::make_unique<AddUniNode>(graphArg,fullName);
+            }else{
+                node=std::make_unique<AddBidNode>(graphArg,fullName);
+            }
+        }else{
+            if constexpr(graphtype==GraphType::Uni){
+                node=std::make_unique<RemUniNode>(graphArg,fullName);
+            }else{
+                node=std::make_unique<RemBidNode>(graphArg,fullName);
+            }
+        }
+        _graphText.push_back(std::move(node));
     }
     template <OpType optype, GraphType graphtype>
     void RelationStore::_RemoveByNameAndType(const std::string &relationName)
@@ -310,11 +327,11 @@ namespace RelationStoreLib
         if (_names.contains(name))
         {
             _names.erase(name);
-            auto it = std::find_if(_graphText.begin(), _graphText.end(), [&](const RelationshipLine &relation)
-                                   { return relation.name == name; });
+            std::vector<std::unique_ptr<RelationStoreLib::Syntax::GeneralSyntaxNode>>::iterator it = std::find_if(_graphText.begin(), _graphText.end(), [&](const std::unique_ptr<GeneralSyntaxNode> &relation)
+                                   { return relation->RelationName == name; });
             if (it != _graphText.end())
             {
-                fullLine = it->content;
+                fullLine = it->get()->ToString();
                 _graphText.erase(it);
             }
         }
