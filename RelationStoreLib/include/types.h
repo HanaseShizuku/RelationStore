@@ -30,7 +30,7 @@ namespace RelationStoreLib::Syntax{
     struct DoConnectionOpArgPack
         {
 
-            std::string_view UniBeginPos;
+            std::string UniBeginPos;
             std::vector<std::string> UniEndPoses;
             std::vector<std::string> BidVertexs;
             std::vector<float> Weights;

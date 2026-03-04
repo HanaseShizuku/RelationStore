@@ -191,7 +191,11 @@ namespace RelationStoreLib::Syntax
     }
     std::string Join(std::vector<std::string> v, std::string s)
     {
-        return shizuku::util::string::Join(v, s);
+        std::vector<std::string> x;
+        for(const auto &ns:v){
+            x.push_back("\""+Replace(Replace(ns,"\\","\\\\"),"\"","\\\"")+"\"");
+        }
+        return shizuku::util::string::Join(x,s);
     }
 
 }

@@ -48,7 +48,12 @@ namespace RelationStoreLib::Syntax
         std::vector<float> fs;
         for (const auto &f : fa)
         {
-            fs.push_back(std::stof(f));
+            try{
+                fs.push_back(std::stof(f));
+            }catch(const std::exception& e){
+                throw std::runtime_error("'f' is not a float,f:"+f);
+            }
+            
         }
         if constexpr (graph == GraphType::Uni)
         {

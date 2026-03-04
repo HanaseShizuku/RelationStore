@@ -7,6 +7,7 @@
 #include<memory>
 #include"include/syntax_nodes.h"
 #include "include/types.h"
+#include <iostream>
 namespace RelationStoreLib::Syntax{
     
         
@@ -45,7 +46,9 @@ namespace RelationStoreLib::Syntax{
             sa.push_back(relationName);
             sa.insert(sa.end(), arg.BidVertexs.begin(), arg.BidVertexs.end());
         }
-        return std::format("{}({}),[{}]", opName, Join(sa, ","), vecFloatToVecString(arg.Weights));
+        std::string result= std::format("{}({}){}", opName, Join(sa, ","), vecFloatToVecString(arg.Weights));
+        std::cout<<"ToStringResult:"<<result<<std::endl;
+        return result;
     }
 };
     
