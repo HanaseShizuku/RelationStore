@@ -50,12 +50,12 @@ namespace RelationStoreLib::algorithm
                 continue;
             for (const auto &nb : _graph.at(current))
             {
-                if (!result.contains(nb))
+                if (!result.contains(nb.AdjacentNodeName))
                 {
-                    result[nb] = {
+                    result[nb.AdjacentNodeName] = {
                         .parent = current,
                         .hops = result[current].hops + 1};
-                    tovisit.push(nb);
+                    tovisit.push(nb.AdjacentNodeName);
                 }
             }
         }

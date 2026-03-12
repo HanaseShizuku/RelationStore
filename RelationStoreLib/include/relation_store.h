@@ -6,22 +6,42 @@
 #include<string>
 #include<map>
 #include<span>
+#include<memory>
+#include"syntax_parse.h"
+#include"syntax_nodes.h"
 namespace RelationStoreLib
 {
 
+    struct AdjNode
+        {
+            std::string AdjacentNodeName;
+            int Weight;
+            AdjNode(const std::string& nodeName) 
+                : AdjacentNodeName(nodeName), Weight(0.0f) {}
+            AdjNode()=default;
+            AdjNode(const std::string &nodeName,int weight)
+                : AdjacentNodeName(nodeName),Weight(weight){}
+        };
+        struct AdjNodeComparator {
+            bool operator()(const AdjNode& a, const AdjNode& b) const {
+                return a.AdjacentNodeName<b.AdjacentNodeName;
+            }
+
+            bool operator()(const AdjNode& a, const std::string& b) const {
+                return a.AdjacentNodeName<b;
+            }
+
+            bool operator()(const std::string& a, const AdjNode& b) const {
+                return a<b.AdjacentNodeName;
+            }
+        };
+        
+        using Graph = std::map<std::string, std::set<AdjNode,AdjNodeComparator>>;
     class RELATION_STORE_LIB_EXPORT RelationStore
     {
     private:
-        struct UniArgPack
-        {
-            std::string_view BeginPos;
-            std::span<const std::string> EndPoses;
-        };
-        struct BidArgPack
-        {
-            std::span<const std::string> Poses;
-        };
-        using Graph = std::map<std::string, std::set<std::string>>;
+        
+        
         using Path = std::filesystem::path;
         struct RelationshipLine
         {
@@ -29,59 +49,45 @@ namespace RelationStoreLib
             std::string content;
         };
 
-        struct DoConnectionOpArgPack
-        {
-            std::string_view UniBeginPos;
-            std::span<const std::string> UniEndPoses;
-            std::span<const std::string> BidVertexs;
-            DoConnectionOpArgPack(const std::string_view &uniBeginPos, const std::span<const std::string> &uniEndPoses, const std::span<const std::string> &BidVertexs);
-            DoConnectionOpArgPack(const UniArgPack &p);
-            DoConnectionOpArgPack(const BidArgPack &p);
-        };
+        std::string _lines;
         Graph _graph;
         Path _tablePath;
-        std::vector<RelationshipLine> _graphText;
+        std::vector<std::unique_ptr<Syntax::GeneralSyntaxNode>> _graphText;
         std::set<std::string> _names;
         bool _isInstance = false;
         void _SetName(const std::string &name);
-        void _AddUniConnection(const std::string &beginPos, std::span<const std::string> endPoses);
-        void _AddBidConnection(std::span<const std::string> vertexs);
+        void _AddUniConnection(const std::string &beginPos, std::span<const std::string> endPoses,const std::vector<int> &weight);
+        void _AddBidConnection(std::span<const std::string> vertexs,const std::vector<int> &weight);
         void _RemoveUniConnection(const std::string &beginPos, std::span<const std::string> endPoses);
         void _RemoveBidConnection(std::span<const std::string> vertexs);
 
-        void _AddUniConnection(const DoConnectionOpArgPack &arg);
-        void _AddBidConnection(const DoConnectionOpArgPack &arg);
-        void _RemoveUniConnection(const DoConnectionOpArgPack &arg);
-        void _RemoveBidConnection(const DoConnectionOpArgPack &arg);
-        enum class OpType
-        {
-            Add,
-            Rem
-        };
-        enum class GraphType
-        {
-            Uni,
-            Bid
-        };
+        void _AddUniConnection(const Syntax::DoConnectionOpArgPack &arg);
+        void _AddBidConnection(const Syntax::DoConnectionOpArgPack &arg);
+        void _RemoveUniConnection(const Syntax::DoConnectionOpArgPack &arg);
+        void _RemoveBidConnection(const Syntax::DoConnectionOpArgPack &arg);
+        bool _ReReadGraph();
+        bool _ReadGraph();
+        bool _ReadGraph(const std::vector<std::unique_ptr<RelationStoreLib::Syntax::GeneralSyntaxNode>> &graphText);
+        void _ReadFile();
 
-        template <OpType optype, GraphType graphtype>
+        template <Syntax::OpType optype, Syntax::GraphType graphtype>
         static constexpr std::string_view _GetPrefixByTemplate();
-        template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
-        void _AddRelationshipText(const std::string &name, const std::vector<std::string> &endposes, const std::string &beginPos = "");
-        void _AddRelationshipText(const std::string &fullName, const std::vector<std::string> &fullVector);
         void _SetTextsToVector();
-        template <RelationStore::OpType optype, RelationStore::GraphType graphType>
-        void _FuncHandler(const DoConnectionOpArgPack &arg);
-        template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
-        void _MakeRelationship(const std::string &relationName, std::conditional_t<graphtype == GraphType::Uni, UniArgPack, BidArgPack> graphArg);
-        template <RelationStore::OpType optype, RelationStore::GraphType graphtype>
+        template <Syntax::OpType optype, Syntax::GraphType graphType>
+        void _FuncHandler(const Syntax::DoConnectionOpArgPack &arg);
+        template <Syntax::OpType optype, Syntax::GraphType graphtype>
+        void _MakeRelationship(const std::string &relationName, std::conditional_t<graphtype == Syntax::GraphType::Uni, Syntax::UniArgPack, Syntax::BidArgPack> graphArg);
+        template <Syntax::OpType optype, Syntax::GraphType graphtype>
         void _RemoveByNameAndType(const std::string &relationName);
+        RelationStore(Path tablePath);
 
     public:
-        RelationStore(Path tablePath);
+        
         static RelationStore NewGraphToFile(Path tablePath);
         void AddUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses);
+        void AddUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses,const std::vector<int> &weight);
         void AddBid(const std::string &name, const std::vector<std::string> &vertexs);
+        void AddBid(const std::string &name, const std::vector<std::string> &vertexs,int weight);
         void RemoveUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses);
         void RemoveBid(const std::string &name, const std::vector<std::string> &vertexs);
 
@@ -90,10 +96,10 @@ namespace RelationStoreLib
         void UndoRemoveUni(const std::string &name);
         void UndoRemoveBid(const std::string &name);
 
-        bool ReadGraph();
+        static RelationStore ReadGraph(Path tablePath);
         Graph GetGraph();
         Graph GetGraphWithoutIsolatedNode();
-
+        std::string GraphToString();
         void SaveGraphTo(Path tablePath);
         void SaveGraph();
     };
