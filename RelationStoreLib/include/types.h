@@ -20,12 +20,12 @@ namespace RelationStoreLib::Syntax{
         {
             std::string_view BeginPos;
             std::vector<std::string> EndPoses;
-            std::vector<float> Weights;
+            std::vector<int> Weights;
         };
         struct BidArgPack
         {
             std::vector<std::string> Poses;
-            std::vector<float> Weight;
+            std::vector<int> Weight;
         };
     struct DoConnectionOpArgPack
         {
@@ -33,8 +33,8 @@ namespace RelationStoreLib::Syntax{
             std::string UniBeginPos;
             std::vector<std::string> UniEndPoses;
             std::vector<std::string> BidVertexs;
-            std::vector<float> Weights;
-            DoConnectionOpArgPack(const std::string_view &uniBeginPos, const std::span<std::string> &uniEndPoses, const std::span< std::string> &BidVertexs,const std::span<float> &weights);
+            std::vector<int> Weights;
+            DoConnectionOpArgPack(const std::string_view &uniBeginPos, const std::span<std::string> &uniEndPoses, const std::span< std::string> &BidVertexs,const std::span<int> &weights);
             DoConnectionOpArgPack(const UniArgPack &p);
             DoConnectionOpArgPack(const BidArgPack &p);
             DoConnectionOpArgPack() = default;

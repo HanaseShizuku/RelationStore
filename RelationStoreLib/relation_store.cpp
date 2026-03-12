@@ -35,17 +35,17 @@ namespace RelationStoreLib
             throw std::runtime_error("Connection relationship names must be unique: " + name);
         }
     }
-    void RelationStore::_AddUniConnection(const string &beginPos, span<const string> endPoses,const vector<float> &weight)
+    void RelationStore::_AddUniConnection(const string &beginPos, span<const string> endPoses,const vector<int> &weight)
     {
         int i=0;
         // 行内除连接方式标识符以外的所有元素与第一个元素单向连接 方向:第一个元素->别的元素
         for (const auto &endPos : endPoses)
         {
-            _graph[beginPos].insert(AdjNode{.AdjacentNodeName=endPos,.Weight=weight[i]});
+            _graph[beginPos].insert(AdjNode(endPos,weight[i]));
             i++;
         }
     }
-    void RelationStore::_AddBidConnection(span<const string> vertexs,const vector<float> &weight)
+    void RelationStore::_AddBidConnection(span<const string> vertexs,const vector<int> &weight)
     {
         // 行内除连接方式标识符以外的元素全连接
         for (size_t i = 0; i < vertexs.size(); ++i)
@@ -54,8 +54,8 @@ namespace RelationStoreLib
             {
                 const auto &a = vertexs[i];
                 const auto &b = vertexs[j];
-                _graph[a].insert(AdjNode{.AdjacentNodeName=b,.Weight=weight[0]});
-                _graph[b].insert(AdjNode{.AdjacentNodeName=a,.Weight=weight[0]});
+                _graph[a].insert(AdjNode(b,weight[0]));
+                _graph[b].insert(AdjNode(a,weight[0]));
             }
         }
     }
@@ -64,7 +64,7 @@ namespace RelationStoreLib
         // 删除行内除连接方式标识符以外的所有元素与第一个元素的单向连接 删除方向:第一个元素->别的元素
         for (const auto &endPos : endPoses)
         {
-            _graph[beginPos].erase(AdjNode{.AdjacentNodeName=endPos});
+            _graph[beginPos].erase(AdjNode(endPos));
         }
     }
     void RelationStore::_RemoveBidConnection(span<const string> vertexs)
@@ -79,12 +79,12 @@ namespace RelationStoreLib
                 auto itA = _graph.find(a);
                 if (itA != _graph.end())
                 {
-                    itA->second.erase(AdjNode{.AdjacentNodeName=b});
+                    itA->second.erase(AdjNode(b));
                 }
                 auto itB = _graph.find(b);
                 if (itB != _graph.end())
                 {
-                    itB->second.erase(AdjNode{.AdjacentNodeName=a});
+                    itB->second.erase(AdjNode(a));
                 }
             }
         }
@@ -138,14 +138,14 @@ namespace RelationStoreLib
         File::WriteAllBytes(tablePath, x);
         return RelationStore(tablePath);
     }
-    void RelationStore::AddUni(const string &name, const string &beginPos, const vector<string> &endPoses,const std::vector<float> &weight)
+    void RelationStore::AddUni(const string &name, const string &beginPos, const vector<string> &endPoses,const std::vector<int> &weight)
     {
         _MakeRelationship<OpType::Add, GraphType::Uni>(name, UniArgPack{.BeginPos = beginPos, .EndPoses = endPoses,.Weights=weight});
     }
     void RelationStore::AddUni(const string &name, const string &beginPos, const vector<string> &endPoses)
     {
         int l=endPoses.size();
-        vector<float> f;
+        vector<int> f;
         for (size_t i = 0; i < l; i++)
         {
             f.push_back(1.0f);
@@ -153,7 +153,7 @@ namespace RelationStoreLib
         
         AddUni(name,beginPos,endPoses,f);
     }
-    void RelationStore::AddBid(const string &name, const vector<string> &vertexs,float weight)
+    void RelationStore::AddBid(const string &name, const vector<string> &vertexs,int weight)
     {
         _MakeRelationship<OpType::Add, GraphType::Bid>(name, BidArgPack{.Poses = vertexs,.Weight={weight}});
     }
@@ -339,7 +339,7 @@ namespace RelationStoreLib
         }
         //auto linetoken = Syntax::SyntaxParser::TokenParse(fullLine);
         
-        std::vector<float> default_weights = {1.0f};
+        std::vector<int> default_weights = {1};
         //DoConnectionOpArgPack arg = DoConnectionOpArgPack(std::span(linetoken)[1], std::span(linetoken).subspan(2), std::span(linetoken).subspan(1), std::span(default_weights));
         DoConnectionOpArgPack arg=nodeobj->GetArgs();
         constexpr OpType trueOP = ((optype == OpType::Add) ? OpType::Rem : OpType::Add);

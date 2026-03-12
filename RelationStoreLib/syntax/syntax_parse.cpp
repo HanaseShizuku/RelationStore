@@ -23,7 +23,7 @@ namespace RelationStoreLib::Syntax
         const std::string_view &uniBeginPos,
         const std::span<std::string> &uniEndPoses,
         const std::span<std::string> &BidVertexs,
-        const std::span<float> &weights)
+        const std::span<int> &weights)
         : UniBeginPos(uniBeginPos),
           UniEndPoses(std::vector(uniEndPoses.begin(), uniEndPoses.end())),
           BidVertexs(std::vector(BidVertexs.begin(), BidVertexs.end())),
@@ -48,22 +48,22 @@ namespace RelationStoreLib::Syntax
         {
             throw std::runtime_error("syntax error");
         }
-        auto _FloatArr = std::span(&(*(fab + 1)), &(*fae));
+        auto _intArr = std::span(&(*(fab + 1)), &(*fae));
         if (opName == "Uni")
         {
-            return Create<AddUniNode>(std::span(_StringArr), std::span(_FloatArr), opName);
+            return Create<AddUniNode>(std::span(_StringArr), std::span(_intArr), opName);
         }
         else if (opName == "Bid")
         {
-            return Create<AddBidNode>(std::span(_StringArr), std::span(_FloatArr), opName);
+            return Create<AddBidNode>(std::span(_StringArr), std::span(_intArr), opName);
         }
         else if (opName == "RemUni")
         {
-            return Create<RemUniNode>(std::span(_StringArr), std::span(_FloatArr), opName);
+            return Create<RemUniNode>(std::span(_StringArr), std::span(_intArr), opName);
         }
         else if (opName == "RemBid")
         {
-            return Create<RemBidNode>(std::span(_StringArr), std::span(_FloatArr), opName);
+            return Create<RemBidNode>(std::span(_StringArr), std::span(_intArr), opName);
         }
         else
         {

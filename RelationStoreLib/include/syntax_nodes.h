@@ -45,13 +45,13 @@ namespace RelationStoreLib::Syntax
     template <GraphType graph>
     DoConnectionOpArgPack GetArgPack(const std::span<std::string> sa, const std::span<std::string> fa)
     {
-        std::vector<float> fs;
+        std::vector<int> fs;
         for (const auto &f : fa)
         {
             try{
                 fs.push_back(std::stof(f));
             }catch(const std::exception& e){
-                throw std::runtime_error("'f' is not a float,f:"+f);
+                throw std::runtime_error("'f' is not a int,f:"+f);
             }
             
         }

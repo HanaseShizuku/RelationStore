@@ -24,9 +24,9 @@ namespace RelationStoreLib::Syntax{
     template <GraphType graph>
     static std::string ArgPackToScriptArg(const DoConnectionOpArgPack &arg, const std::string &opName, const std::string &relationName)
     {
-        auto vecFloatToVecString = [](const std::vector<float> &fs)
+        auto vecintToVecString = [](const std::vector<int> &fs)
         {
-            return fs | std::views::transform([](float f)
+            return fs | std::views::transform([](int f)
                                               {
                                                   return std::format("{}", f); 
                                               }) |
@@ -46,7 +46,7 @@ namespace RelationStoreLib::Syntax{
             sa.push_back(relationName);
             sa.insert(sa.end(), arg.BidVertexs.begin(), arg.BidVertexs.end());
         }
-        std::string result= std::format("{}({})[{}];", opName, Join(sa, ","), arg.Weights | std::views::transform([](float f) { return std::format("{}", f); }) 
+        std::string result= std::format("{}({})[{}];", opName, Join(sa, ","), arg.Weights | std::views::transform([](int f) { return std::format("{}", f); }) 
                 | std::views::join_with(',') 
                 | std::ranges::to<std::string>());
         return result;

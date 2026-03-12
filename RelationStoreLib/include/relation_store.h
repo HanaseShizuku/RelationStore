@@ -15,11 +15,24 @@ namespace RelationStoreLib
     struct AdjNode
         {
             std::string AdjacentNodeName;
-            float Weight;
+            int Weight;
+            AdjNode(const std::string& nodeName) 
+                : AdjacentNodeName(nodeName), Weight(0.0f) {}
+            AdjNode()=default;
+            AdjNode(const std::string &nodeName,int weight)
+                : AdjacentNodeName(nodeName),Weight(weight){}
         };
         struct AdjNodeComparator {
             bool operator()(const AdjNode& a, const AdjNode& b) const {
                 return a.AdjacentNodeName<b.AdjacentNodeName;
+            }
+
+            bool operator()(const AdjNode& a, const std::string& b) const {
+                return a.AdjacentNodeName<b;
+            }
+
+            bool operator()(const std::string& a, const AdjNode& b) const {
+                return a<b.AdjacentNodeName;
             }
         };
         
@@ -43,8 +56,8 @@ namespace RelationStoreLib
         std::set<std::string> _names;
         bool _isInstance = false;
         void _SetName(const std::string &name);
-        void _AddUniConnection(const std::string &beginPos, std::span<const std::string> endPoses,const std::vector<float> &weight);
-        void _AddBidConnection(std::span<const std::string> vertexs,const std::vector<float> &weight);
+        void _AddUniConnection(const std::string &beginPos, std::span<const std::string> endPoses,const std::vector<int> &weight);
+        void _AddBidConnection(std::span<const std::string> vertexs,const std::vector<int> &weight);
         void _RemoveUniConnection(const std::string &beginPos, std::span<const std::string> endPoses);
         void _RemoveBidConnection(std::span<const std::string> vertexs);
 
@@ -68,9 +81,9 @@ namespace RelationStoreLib
         RelationStore(Path tablePath);
         static RelationStore NewGraphToFile(Path tablePath);
         void AddUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses);
-        void AddUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses,const std::vector<float> &weight);
+        void AddUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses,const std::vector<int> &weight);
         void AddBid(const std::string &name, const std::vector<std::string> &vertexs);
-        void AddBid(const std::string &name, const std::vector<std::string> &vertexs,float weight);
+        void AddBid(const std::string &name, const std::vector<std::string> &vertexs,int weight);
         void RemoveUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses);
         void RemoveBid(const std::string &name, const std::vector<std::string> &vertexs);
 
