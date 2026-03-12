@@ -12,11 +12,23 @@
 namespace RelationStoreLib
 {
 
+    struct AdjNode
+        {
+            std::string AdjacentNodeName;
+            float Weight;
+        };
+        struct AdjNodeComparator {
+            bool operator()(const AdjNode& a, const AdjNode& b) const {
+                return a.AdjacentNodeName<b.AdjacentNodeName;
+            }
+        };
+        
+        using Graph = std::map<std::string, std::set<AdjNode,AdjNodeComparator>>;
     class RELATION_STORE_LIB_EXPORT RelationStore
     {
     private:
         
-        using Graph = std::map<std::string, std::set<std::string>>;
+        
         using Path = std::filesystem::path;
         struct RelationshipLine
         {
@@ -31,8 +43,8 @@ namespace RelationStoreLib
         std::set<std::string> _names;
         bool _isInstance = false;
         void _SetName(const std::string &name);
-        void _AddUniConnection(const std::string &beginPos, std::span<const std::string> endPoses);
-        void _AddBidConnection(std::span<const std::string> vertexs);
+        void _AddUniConnection(const std::string &beginPos, std::span<const std::string> endPoses,const std::vector<float> &weight);
+        void _AddBidConnection(std::span<const std::string> vertexs,const std::vector<float> &weight);
         void _RemoveUniConnection(const std::string &beginPos, std::span<const std::string> endPoses);
         void _RemoveBidConnection(std::span<const std::string> vertexs);
 

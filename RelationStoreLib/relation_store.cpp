@@ -22,7 +22,6 @@ namespace RelationStoreLib
     using namespace shizuku::util::string;
     using namespace Syntax;
     namespace fs = std::filesystem;
-    using Graph = map<string, set<string>>;
     using Path = fs::path;
 
     void RelationStore::_SetName(const string &name)
@@ -36,15 +35,17 @@ namespace RelationStoreLib
             throw std::runtime_error("Connection relationship names must be unique: " + name);
         }
     }
-    void RelationStore::_AddUniConnection(const string &beginPos, span<const string> endPoses)
+    void RelationStore::_AddUniConnection(const string &beginPos, span<const string> endPoses,const vector<float> &weight)
     {
+        int i=0;
         // 行内除连接方式标识符以外的所有元素与第一个元素单向连接 方向:第一个元素->别的元素
         for (const auto &endPos : endPoses)
         {
-            _graph[beginPos].insert(endPos);
+            _graph[beginPos].insert(AdjNode{.AdjacentNodeName=endPos,.Weight=weight[i]});
+            i++;
         }
     }
-    void RelationStore::_AddBidConnection(span<const string> vertexs)
+    void RelationStore::_AddBidConnection(span<const string> vertexs,const vector<float> &weight)
     {
         // 行内除连接方式标识符以外的元素全连接
         for (size_t i = 0; i < vertexs.size(); ++i)
@@ -53,8 +54,8 @@ namespace RelationStoreLib
             {
                 const auto &a = vertexs[i];
                 const auto &b = vertexs[j];
-                _graph[a].insert(b);
-                _graph[b].insert(a);
+                _graph[a].insert(AdjNode{.AdjacentNodeName=b,.Weight=weight[0]});
+                _graph[b].insert(AdjNode{.AdjacentNodeName=a,.Weight=weight[0]});
             }
         }
     }
@@ -63,7 +64,7 @@ namespace RelationStoreLib
         // 删除行内除连接方式标识符以外的所有元素与第一个元素的单向连接 删除方向:第一个元素->别的元素
         for (const auto &endPos : endPoses)
         {
-            _graph[beginPos].erase(endPos);
+            _graph[beginPos].erase(AdjNode{.AdjacentNodeName=endPos});
         }
     }
     void RelationStore::_RemoveBidConnection(span<const string> vertexs)
@@ -78,12 +79,12 @@ namespace RelationStoreLib
                 auto itA = _graph.find(a);
                 if (itA != _graph.end())
                 {
-                    itA->second.erase(b);
+                    itA->second.erase(AdjNode{.AdjacentNodeName=b});
                 }
                 auto itB = _graph.find(b);
                 if (itB != _graph.end())
                 {
-                    itB->second.erase(a);
+                    itB->second.erase(AdjNode{.AdjacentNodeName=a});
                 }
             }
         }
@@ -91,12 +92,12 @@ namespace RelationStoreLib
 
     void RelationStore::_AddUniConnection(const DoConnectionOpArgPack &arg)
     {
-        _AddUniConnection(shizuku::util::string::view::FromView(arg.UniBeginPos), arg.UniEndPoses);
+        _AddUniConnection(shizuku::util::string::view::FromView(arg.UniBeginPos), arg.UniEndPoses,arg.Weights);
     }
 
     void RelationStore::_AddBidConnection(const DoConnectionOpArgPack &arg)
     {
-        _AddBidConnection(arg.BidVertexs);
+        _AddBidConnection(arg.BidVertexs,arg.Weights);
     }
 
     void RelationStore::_RemoveUniConnection(const DoConnectionOpArgPack &arg)
