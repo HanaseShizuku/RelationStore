@@ -67,7 +67,7 @@ int main(){
     SaveAndLoadCompareSample(true);
     relationStorePtr->SaveGraph();
     relationStorePtr.release();
-    relationStorePtr=make_unique<RelationStore>(RelationStore("relation.txt"));
+    relationStorePtr=make_unique<RelationStore>(RelationStore::ReadGraph("relation.txt"));
     SaveAndLoadCompareSample(false);
     std::cout<<"==============Undo Test=============="<<std::endl;
     UndoTest();

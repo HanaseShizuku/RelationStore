@@ -190,8 +190,7 @@ namespace RelationStoreLib
         _RemoveByNameAndType<OpType::Rem, GraphType::Bid>(name);
     }
 
-    bool RelationStore::ReadGraph()
-    {
+    bool RelationStore::_ReadGraph(Path tablePath){
         _SetTextsToVector();
         for (const auto &s : _graphText)
         {
@@ -222,6 +221,12 @@ namespace RelationStoreLib
             }
         }
         return true;
+    }
+    RelationStore RelationStore::ReadGraph(Path tablePath)
+    {
+        auto x=RelationStore(tablePath);
+        x._ReadGraph(tablePath);
+        return x;
     }
     Graph RelationStore::GetGraph()
     {

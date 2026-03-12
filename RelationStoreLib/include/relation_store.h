@@ -65,7 +65,7 @@ namespace RelationStoreLib
         void _AddBidConnection(const Syntax::DoConnectionOpArgPack &arg);
         void _RemoveUniConnection(const Syntax::DoConnectionOpArgPack &arg);
         void _RemoveBidConnection(const Syntax::DoConnectionOpArgPack &arg);
-        
+        bool _ReadGraph(Path tablePath);
 
         template <Syntax::OpType optype, Syntax::GraphType graphtype>
         static constexpr std::string_view _GetPrefixByTemplate();
@@ -76,9 +76,10 @@ namespace RelationStoreLib
         void _MakeRelationship(const std::string &relationName, std::conditional_t<graphtype == Syntax::GraphType::Uni, Syntax::UniArgPack, Syntax::BidArgPack> graphArg);
         template <Syntax::OpType optype, Syntax::GraphType graphtype>
         void _RemoveByNameAndType(const std::string &relationName);
+        RelationStore(Path tablePath);
 
     public:
-        RelationStore(Path tablePath);
+        
         static RelationStore NewGraphToFile(Path tablePath);
         void AddUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses);
         void AddUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses,const std::vector<int> &weight);
@@ -92,7 +93,7 @@ namespace RelationStoreLib
         void UndoRemoveUni(const std::string &name);
         void UndoRemoveBid(const std::string &name);
 
-        bool ReadGraph();
+        static RelationStore ReadGraph(Path tablePath);
         Graph GetGraph();
         Graph GetGraphWithoutIsolatedNode();
 
