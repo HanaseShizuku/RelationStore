@@ -102,6 +102,12 @@ void SaveFinalResultStr(stringstream &ss,unique_ptr<RelationStore> &bfs){
 }
 
 int main(){
+    RelationStore x=RelationStore::NewGraphToFile("savetest.txt");
+    x.AddUni("测试关系","起点",{"终点1","终点2"});
+    x.SaveGraph();
+}
+
+int _main(){
     //先新建
     TestNew();
     //测逻辑

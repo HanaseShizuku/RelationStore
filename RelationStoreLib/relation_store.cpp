@@ -317,6 +317,7 @@ namespace RelationStoreLib
                 node=std::make_unique<RemBidNode>(graphArg,fullName);
             }
         }
+        node->RelationName=relationName;
         _graphText.push_back(std::move(node));
     }
     template <OpType optype, GraphType graphtype>
