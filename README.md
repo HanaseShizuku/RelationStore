@@ -1,6 +1,6 @@
 # RelationStore
 
-一个简单的存储,修改无权图的工具
+一个简单的存储,修改简单图的工具
 
 ~~部分代码从[这里](https://github.com/HanaseShizuku/ChinaMapGraphExperiment)偷的~~
 
