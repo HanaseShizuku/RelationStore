@@ -49,7 +49,7 @@ namespace RelationStoreLib
             std::string content;
         };
 
-        
+        std::string _lines;
         Graph _graph;
         Path _tablePath;
         std::vector<std::unique_ptr<Syntax::GeneralSyntaxNode>> _graphText;
@@ -65,7 +65,10 @@ namespace RelationStoreLib
         void _AddBidConnection(const Syntax::DoConnectionOpArgPack &arg);
         void _RemoveUniConnection(const Syntax::DoConnectionOpArgPack &arg);
         void _RemoveBidConnection(const Syntax::DoConnectionOpArgPack &arg);
-        bool _ReadGraph(Path tablePath);
+        bool _ReReadGraph();
+        bool _ReadGraph();
+        bool _ReadGraph(const std::vector<std::unique_ptr<RelationStoreLib::Syntax::GeneralSyntaxNode>> &graphText);
+        void _ReadFile();
 
         template <Syntax::OpType optype, Syntax::GraphType graphtype>
         static constexpr std::string_view _GetPrefixByTemplate();
@@ -96,7 +99,7 @@ namespace RelationStoreLib
         static RelationStore ReadGraph(Path tablePath);
         Graph GetGraph();
         Graph GetGraphWithoutIsolatedNode();
-
+        std::string GraphToString();
         void SaveGraphTo(Path tablePath);
         void SaveGraph();
     };

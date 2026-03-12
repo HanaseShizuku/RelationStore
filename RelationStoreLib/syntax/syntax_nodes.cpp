@@ -14,6 +14,7 @@ namespace RelationStoreLib::Syntax
         _GraphType = GraphType::Uni;
         _ArgPack = GetArgPack<GraphType::Uni>(sa, fa);
         RelationName=sa[0];
+        OpName="Uni";
     }
     std::string AddUniNode::ToString()
     {
@@ -34,6 +35,7 @@ namespace RelationStoreLib::Syntax
         _GraphType = GraphType::Bid;
         _ArgPack = GetArgPack<GraphType::Bid>(sa, fa);
         RelationName=sa[0];
+        OpName="Bid";
     }
     std::string AddBidNode::ToString()
     {
@@ -52,6 +54,7 @@ namespace RelationStoreLib::Syntax
         _GraphType = GraphType::Uni;
         _ArgPack = GetArgPack<GraphType::Uni>(sa, fa);
         RelationName=sa[0];
+        OpName="RemUni";
     }
     std::string RemUniNode::ToString()
     {
@@ -70,6 +73,7 @@ namespace RelationStoreLib::Syntax
         _GraphType = GraphType::Bid;
         _ArgPack = GetArgPack<GraphType::Bid>(sa, fa);
         RelationName=sa[0];
+        OpName="RemBid";
     }
     std::string RemBidNode::ToString()
     {

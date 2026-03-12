@@ -37,8 +37,9 @@ void RelationAddTest(){
     relationStorePtr->AddUni("DefaultWeightUni","DWUni.begin",{"DWUni.end1","DWUni.end2"});
     ShowRelation("Default Weight Uni Test","DWUni.begin","DWUni.end1");
     relationStorePtr->AddUni("CustomWeightUniPo","CWUni.P1",{"CWUni.P2"},{9});
+    ShowRelation("Custom Weight Uni Test 1","CWUni.P1","CWUni.P2");
     relationStorePtr->AddUni("CustomWeightUniNe","CWUni.P2",{"CWUni.P1"},{1});
-    ShowRelation("Custom Weight Uni Test","CWUni.P1","CWUni.P2");
+    ShowRelation("Custom Weight Uni Test 2","CWUni.P1","CWUni.P2");
     relationStorePtr->AddBid("WeightBid",{"WBid.P1","WBid.P2","WBid.P3"},114514);
     ShowRelation("Weight Bid Test","WBid.P1","WBid.P2");
     relationStorePtr->RemoveUni("UniRemove","WBid.P1",{"WBid.P2"});
@@ -77,3 +78,8 @@ int main(){
 
 }
 
+int _main(){
+    relationStorePtr=make_unique<RelationStore>(RelationStore::ReadGraph("relation_after_delete.txt"));
+    ShowRelation("Undo Bid Remove Test","WBid.P1","WBid.P3");
+    ShowRelation("Custom Weight Uni Test","CWUni.P1","CWUni.P2");
+}

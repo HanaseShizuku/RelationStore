@@ -110,12 +110,15 @@ namespace RelationStoreLib
         _RemoveBidConnection(arg.BidVertexs);
     }
 
+    void RelationStore::_ReadFile(){
+        _lines = File::ReadAllText(_tablePath);
+        _lines=Replace(_lines,"\n","");
+    }
 
     void RelationStore::_SetTextsToVector()
     {
-        std::string lines = File::ReadAllText(_tablePath);
-        lines=Replace(lines,"\n","");
-        std::vector<std::unique_ptr<GeneralSyntaxNode>> nodes=SyntaxParser::Parse(lines);
+        
+        std::vector<std::unique_ptr<GeneralSyntaxNode>> nodes=SyntaxParser::Parse(_lines);
         for (auto &line : nodes)
         {
             string name = line->RelationName;
@@ -190,13 +193,14 @@ namespace RelationStoreLib
         _RemoveByNameAndType<OpType::Rem, GraphType::Bid>(name);
     }
 
-    bool RelationStore::_ReadGraph(Path tablePath){
+    bool RelationStore::_ReadGraph(const std::vector<std::unique_ptr<RelationStoreLib::Syntax::GeneralSyntaxNode>> &graphText){
         _SetTextsToVector();
-        for (const auto &s : _graphText)
+        for (const auto &s : graphText)
         {
             auto arg = s->GetArgs();
             auto optype = s->GetOpType();
             auto graphtype = s->GetGraphType();
+            
             if (optype == OpType::Add)
             {
                 if (graphtype == GraphType::Uni)
@@ -222,10 +226,23 @@ namespace RelationStoreLib
         }
         return true;
     }
+    bool RelationStore::_ReReadGraph(){
+        _lines=GraphToString();
+        _lines=Replace(_lines,"\n","");
+        _names.clear();
+        
+        _graphText.clear();
+        _graph.clear();
+        return _ReadGraph();
+    }
+    bool RelationStore::_ReadGraph(){
+        return _ReadGraph(_graphText);
+    }
     RelationStore RelationStore::ReadGraph(Path tablePath)
     {
         auto x=RelationStore(tablePath);
-        x._ReadGraph(tablePath);
+        x._ReadFile();
+        x._ReadGraph();
         return x;
     }
     Graph RelationStore::GetGraph()
@@ -239,15 +256,19 @@ namespace RelationStoreLib
         return std::ranges::to<Graph>(returnGraph);
     }
 
-    void RelationStore::SaveGraphTo(Path tablePath)
+    std::string RelationStore::GraphToString()
     {
-        
-        std::vector<string> s;
+         std::vector<string> s;
         for(const auto &x:_graphText){
             s.push_back(x->ToString());
         }
         std::string result=shizuku::util::string::Join(s, "\n");
-        File::WriteAllText(tablePath, result);
+        return result;
+    }
+    void RelationStore::SaveGraphTo(Path tablePath)
+    {
+        
+        File::WriteAllText(tablePath, GraphToString());
     }
     void RelationStore::SaveGraph()
     {
@@ -342,13 +363,6 @@ namespace RelationStoreLib
         {
             throw std::runtime_error("Relationship does not exist: " + name);
         }
-        //auto linetoken = Syntax::SyntaxParser::TokenParse(fullLine);
-        
-        std::vector<int> default_weights = {1};
-        //DoConnectionOpArgPack arg = DoConnectionOpArgPack(std::span(linetoken)[1], std::span(linetoken).subspan(2), std::span(linetoken).subspan(1), std::span(default_weights));
-        DoConnectionOpArgPack arg=nodeobj->GetArgs();
-        constexpr OpType trueOP = ((optype == OpType::Add) ? OpType::Rem : OpType::Add);
-        
-        _FuncHandler<trueOP, graphtype>(arg);
+        _ReReadGraph();
     }
 }
