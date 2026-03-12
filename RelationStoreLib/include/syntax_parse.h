@@ -46,7 +46,9 @@ namespace RelationStoreLib::Syntax{
             sa.push_back(relationName);
             sa.insert(sa.end(), arg.BidVertexs.begin(), arg.BidVertexs.end());
         }
-        std::string result= std::format("{}({}){};", opName, Join(sa, ","), vecFloatToVecString(arg.Weights));
+        std::string result= std::format("{}({})[{}];", opName, Join(sa, ","), arg.Weights | std::views::transform([](float f) { return std::format("{}", f); }) 
+                | std::views::join_with(',') 
+                | std::ranges::to<std::string>());
         return result;
     }
 };
