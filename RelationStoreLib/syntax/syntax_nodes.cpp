@@ -25,6 +25,7 @@ namespace RelationStoreLib::Syntax
         OpName="Uni";
         _GraphType=GraphType::Uni;
         _ArgPack=arg;
+        
     }
     
     void AddBidNode::Init(const std::span<std::string> &sa, const std::span<std::string> &fa)

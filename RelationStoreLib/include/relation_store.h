@@ -56,7 +56,9 @@ namespace RelationStoreLib
         RelationStore(Path tablePath);
         static RelationStore NewGraphToFile(Path tablePath);
         void AddUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses);
+        void AddUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses,const std::vector<float> &weight);
         void AddBid(const std::string &name, const std::vector<std::string> &vertexs);
+        void AddBid(const std::string &name, const std::vector<std::string> &vertexs,float weight);
         void RemoveUni(const std::string &name, const std::string &beginPos, const std::vector<std::string> &endPoses);
         void RemoveBid(const std::string &name, const std::vector<std::string> &vertexs);
 

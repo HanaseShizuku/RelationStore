@@ -137,13 +137,28 @@ namespace RelationStoreLib
         File::WriteAllBytes(tablePath, x);
         return RelationStore(tablePath);
     }
+    void RelationStore::AddUni(const string &name, const string &beginPos, const vector<string> &endPoses,const std::vector<float> &weight)
+    {
+        _MakeRelationship<OpType::Add, GraphType::Uni>(name, UniArgPack{.BeginPos = beginPos, .EndPoses = endPoses,.Weights=weight});
+    }
     void RelationStore::AddUni(const string &name, const string &beginPos, const vector<string> &endPoses)
     {
-        _MakeRelationship<OpType::Add, GraphType::Uni>(name, UniArgPack{.BeginPos = beginPos, .EndPoses = endPoses});
+        int l=endPoses.size();
+        vector<float> f;
+        for (size_t i = 0; i < l; i++)
+        {
+            f.push_back(1.0f);
+        }
+        
+        AddUni(name,beginPos,endPoses,f);
+    }
+    void RelationStore::AddBid(const string &name, const vector<string> &vertexs,float weight)
+    {
+        _MakeRelationship<OpType::Add, GraphType::Bid>(name, BidArgPack{.Poses = vertexs,.Weight={weight}});
     }
     void RelationStore::AddBid(const string &name, const vector<string> &vertexs)
     {
-        _MakeRelationship<OpType::Add, GraphType::Bid>(name, BidArgPack{.Poses = vertexs});
+        AddBid(name,vertexs,1.0f);
     }
     void RelationStore::RemoveUni(const string &name, const string &beginPos, const vector<string> &endPoses)
     {
@@ -279,29 +294,6 @@ namespace RelationStoreLib
         std::string fullName = relationName;
         _SetName(fullName);
         _FuncHandler<optype, graphtype>(graphArg);
-        std::vector<std::string> postelement;
-        const int preReserveSize = [&]()
-        {
-            if constexpr (graphtype == GraphType::Uni)
-            {
-                return 2 + graphArg.EndPoses.size();
-            }
-            else
-            {
-                return 1 + graphArg.Poses.size();
-            }
-        }();
-        postelement.reserve(preReserveSize);
-        postelement.push_back(fullName);
-        if constexpr (graphtype == GraphType::Uni)
-        {
-            postelement.push_back(std::string(graphArg.BeginPos));
-            postelement.insert(postelement.end(), graphArg.EndPoses.begin(), graphArg.EndPoses.end());
-        }
-        else
-        {
-            postelement.insert(postelement.end(), graphArg.Poses.begin(), graphArg.Poses.end());
-        }
         std::unique_ptr<GeneralSyntaxNode> node;
         
         
