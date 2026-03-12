@@ -101,13 +101,13 @@ void SaveFinalResultStr(stringstream &ss,unique_ptr<RelationStore> &bfs){
     ConnectTest("全连通2","全连通3",ss,bfs);
 }
 
-int main(){
+int _main(){
     RelationStore x=RelationStore::NewGraphToFile("savetest.txt");
     x.AddUni("测试关系","起点",{"终点1","终点2"});
     x.SaveGraph();
 }
 
-int _main(){
+int main(){
     //先新建
     TestNew();
     //测逻辑

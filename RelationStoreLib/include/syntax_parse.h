@@ -47,7 +47,6 @@ namespace RelationStoreLib::Syntax{
             sa.insert(sa.end(), arg.BidVertexs.begin(), arg.BidVertexs.end());
         }
         std::string result= std::format("{}({}){}", opName, Join(sa, ","), vecFloatToVecString(arg.Weights));
-        std::cout<<"ToStringResult:"<<result<<std::endl;
         return result;
     }
 };

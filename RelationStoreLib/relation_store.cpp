@@ -13,6 +13,7 @@
 #include "utils/string.hpp"
 #include "include/relation_store.h"
 #include "include/syntax_nodes.h"
+#include "include/syntax_parse.h"
 
 namespace RelationStoreLib
 {
@@ -224,7 +225,8 @@ namespace RelationStoreLib
         for(const auto &x:_graphText){
             s.push_back(x->ToString());
         }
-        File::WriteAllText(tablePath, Join(s, "\n"));
+        std::string result=shizuku::util::string::Join(s, "\n");
+        File::WriteAllText(tablePath, result);
     }
     void RelationStore::SaveGraph()
     {
@@ -274,8 +276,7 @@ namespace RelationStoreLib
     template <OpType optype, GraphType graphtype>
     void RelationStore::_MakeRelationship(const std::string &relationName, std::conditional_t<graphtype == GraphType::Uni, UniArgPack, BidArgPack> graphArg)
     {
-        constexpr auto prefix = _GetPrefixByTemplate<optype, graphtype>();
-        std::string fullName = prefix + relationName;
+        std::string fullName = relationName;
         _SetName(fullName);
         _FuncHandler<optype, graphtype>(graphArg);
         std::vector<std::string> postelement;
@@ -324,26 +325,32 @@ namespace RelationStoreLib
     void RelationStore::_RemoveByNameAndType(const std::string &relationName)
     {
         std::string fullLine;
-        std::string name = _GetPrefixByTemplate<optype, graphtype>() + relationName;
+        std::string name = relationName;
+        std::unique_ptr<RelationStoreLib::Syntax::GeneralSyntaxNode> nodeobj;
+        std::vector<std::unique_ptr<RelationStoreLib::Syntax::GeneralSyntaxNode>>::iterator it;
         if (_names.contains(name))
         {
             _names.erase(name);
-            std::vector<std::unique_ptr<RelationStoreLib::Syntax::GeneralSyntaxNode>>::iterator it = std::find_if(_graphText.begin(), _graphText.end(), [&](const std::unique_ptr<GeneralSyntaxNode> &relation)
+            it = std::find_if(_graphText.begin(), _graphText.end(), [&](const std::unique_ptr<GeneralSyntaxNode> &relation)
                                    { return relation->RelationName == name; });
             if (it != _graphText.end())
             {
-                fullLine = it->get()->ToString();
+                nodeobj = std::move(*it);
                 _graphText.erase(it);
+                
             }
         }
         else
         {
             throw std::runtime_error("Relationship does not exist: " + name);
         }
-        auto linetoken = shizuku::util::string::Split(fullLine, ' ');
+        //auto linetoken = Syntax::SyntaxParser::TokenParse(fullLine);
+        
         std::vector<float> default_weights = {1.0f};
-        DoConnectionOpArgPack arg = DoConnectionOpArgPack(std::span(linetoken)[1], std::span(linetoken).subspan(2), std::span(linetoken).subspan(1), std::span(default_weights));
+        //DoConnectionOpArgPack arg = DoConnectionOpArgPack(std::span(linetoken)[1], std::span(linetoken).subspan(2), std::span(linetoken).subspan(1), std::span(default_weights));
+        DoConnectionOpArgPack arg=nodeobj->GetArgs();
         constexpr OpType trueOP = ((optype == OpType::Add) ? OpType::Rem : OpType::Add);
+        
         _FuncHandler<trueOP, graphtype>(arg);
     }
 }
